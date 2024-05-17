@@ -10,6 +10,9 @@ public class PartialClassTests
     public void GeneratesMethodFromOtherParts()
     {
         var tInterface = typeof(IPartialClass);
-        tInterface.GetMethods().Should().Contain(x => x.Name == nameof(PartialClass.SomeMethodThatShouldGenerate));
+        tInterface
+            .GetMethods()
+            .Should()
+            .Contain(x => x.Name == nameof(PartialClass.SomeMethodThatShouldGenerate));
     }
 }

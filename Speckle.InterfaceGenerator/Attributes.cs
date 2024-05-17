@@ -9,8 +9,9 @@ internal class Attributes
 
     public const string VisibilityModifierPropName = "VisibilityModifier";
     public const string InterfaceNamePropName = "Name";
-        
-    public static readonly string AttributesSourceCode = $@"
+
+    public static readonly string AttributesSourceCode =
+        $@"
 
 using System;
 using System.Diagnostics;

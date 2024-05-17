@@ -5,7 +5,4 @@ using Speckle.InterfaceGenerator;
 namespace InterfaceGenerator.Tests.SameName_2;
 
 [GenerateAutoInterface]
-internal class SameNameClass : ISameNameClass
-{
-    
-}
+internal class SameNameClass : ISameNameClass { }

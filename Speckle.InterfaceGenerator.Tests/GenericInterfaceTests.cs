@@ -18,12 +18,15 @@ public class GenericInterfaceTests
 
         genericArgs[0].IsClass.Should().BeTrue();
         genericArgs[0]
-            .GenericParameterAttributes
-            .Should()
+            .GenericParameterAttributes.Should()
             .HaveFlag(GenericParameterAttributes.DefaultConstructorConstraint);
 
         var iEquatableOfTx = typeof(IEquatable<>).MakeGenericType(genericArgs[0]);
-        genericArgs[0].GetGenericParameterConstraints().Should().HaveCount(1).And.Contain(iEquatableOfTx);
+        genericArgs[0]
+            .GetGenericParameterConstraints()
+            .Should()
+            .HaveCount(1)
+            .And.Contain(iEquatableOfTx);
 
         genericArgs[1].IsValueType.Should().BeTrue();
     }
@@ -33,6 +36,4 @@ public class GenericInterfaceTests
 // ReSharper disable once UnusedType.Global
 internal class GenericInterfaceTestsService<TX, TY> : IGenericInterfaceTestsService<TX, TY>
     where TX : class, IEquatable<TX>, new()
-    where TY : struct
-{
-}
+    where TY : struct { }

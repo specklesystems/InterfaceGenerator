@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using FluentAssertions;
 using FluentAssertions.Common;
@@ -18,7 +19,11 @@ public class AccessorsGenerationTests
     [Fact]
     public void GetSetIndexer_IsImplemented()
     {
-        var indexer = typeof(IAccessorsTestsService).GetIndexerByParameterTypes(new[] { typeof(string) });
+        var indexer = typeof(IAccessorsTestsService)
+            .GetProperties()
+            .First(x =>
+                x.GetIndexParameters().Select(x => x.ParameterType).Contains(typeof(string))
+            );
 
         indexer.Should().NotBeNull();
 
@@ -32,8 +37,10 @@ public class AccessorsGenerationTests
     [Fact]
     public void PublicProperty_IsImplemented()
     {
-        var prop = typeof(IAccessorsTestsService)
-            .GetProperty(nameof(IAccessorsTestsService.PublicProperty)) ?? throw new InvalidOperationException();
+        var prop =
+            typeof(IAccessorsTestsService).GetProperty(
+                nameof(IAccessorsTestsService.PublicProperty)
+            ) ?? throw new InvalidOperationException();
 
         prop.Should().NotBeNull();
 
@@ -47,15 +54,19 @@ public class AccessorsGenerationTests
     [Fact]
     public void InitProperty_IsImplemented()
     {
-        var prop = typeof(IAccessorsTestsService)
-            .GetProperty(nameof(IAccessorsTestsService.InitOnlyProperty)) ?? throw new InvalidOperationException();
+        var prop =
+            typeof(IAccessorsTestsService).GetProperty(
+                nameof(IAccessorsTestsService.InitOnlyProperty)
+            ) ?? throw new InvalidOperationException();
 
         prop.Should().NotBeNull();
 
         prop.GetMethod.Should().NotBeNull();
         prop.SetMethod.Should().NotBeNull();
 
-        prop.SetMethod?.ReturnParameter?.GetRequiredCustomModifiers().Should().Contain(typeof(IsExternalInit));
+        prop.SetMethod?.ReturnParameter?.GetRequiredCustomModifiers()
+            .Should()
+            .Contain(typeof(IsExternalInit));
 
         var _ = _sut.InitOnlyProperty;
     }
@@ -63,8 +74,10 @@ public class AccessorsGenerationTests
     [Fact]
     public void PrivateSetter_IsOmitted()
     {
-        var prop = typeof(IAccessorsTestsService)
-            .GetProperty(nameof(IAccessorsTestsService.PropertyWithPrivateSetter)) ?? throw new InvalidOperationException();
+        var prop =
+            typeof(IAccessorsTestsService).GetProperty(
+                nameof(IAccessorsTestsService.PropertyWithPrivateSetter)
+            ) ?? throw new InvalidOperationException();
 
         prop.Should().NotBeNull();
 
@@ -77,8 +90,10 @@ public class AccessorsGenerationTests
     [Fact]
     public void PrivateGetter_IsOmitted()
     {
-        var prop = typeof(IAccessorsTestsService)
-            .GetProperty(nameof(IAccessorsTestsService.PropertyWithPrivateGetter)) ?? throw new InvalidOperationException();
+        var prop =
+            typeof(IAccessorsTestsService).GetProperty(
+                nameof(IAccessorsTestsService.PropertyWithPrivateGetter)
+            ) ?? throw new InvalidOperationException();
 
         prop.Should().NotBeNull();
 
@@ -91,8 +106,10 @@ public class AccessorsGenerationTests
     [Fact]
     public void ProtectedSetter_IsOmitted()
     {
-        var prop = typeof(IAccessorsTestsService)
-            .GetProperty(nameof(IAccessorsTestsService.PropertyWithProtectedSetter)) ?? throw new InvalidOperationException();
+        var prop =
+            typeof(IAccessorsTestsService).GetProperty(
+                nameof(IAccessorsTestsService.PropertyWithProtectedSetter)
+            ) ?? throw new InvalidOperationException();
 
         prop.Should().NotBeNull();
 
@@ -105,8 +122,10 @@ public class AccessorsGenerationTests
     [Fact]
     public void ProtectedGetter_IsOmitted()
     {
-        var prop = typeof(IAccessorsTestsService)
-            .GetProperty(nameof(IAccessorsTestsService.PropertyWithProtectedGetter)) ?? throw new InvalidOperationException();
+        var prop =
+            typeof(IAccessorsTestsService).GetProperty(
+                nameof(IAccessorsTestsService.PropertyWithProtectedGetter)
+            ) ?? throw new InvalidOperationException();
 
         prop.Should().NotBeNull();
 
@@ -119,8 +138,9 @@ public class AccessorsGenerationTests
     [Fact]
     public void IgnoredProperty_IsOmitted()
     {
-        var prop = typeof(IAccessorsTestsService)
-            .GetProperty(nameof(AccessorsTestsService.IgnoredProperty));
+        var prop = typeof(IAccessorsTestsService).GetProperty(
+            nameof(AccessorsTestsService.IgnoredProperty)
+        );
 
         prop.Should().BeNull();
     }
@@ -128,8 +148,9 @@ public class AccessorsGenerationTests
     [Fact]
     public void StaticProperty_IsOmitted()
     {
-        var prop = typeof(IAccessorsTestsService)
-            .GetProperty(nameof(AccessorsTestsService.StaticProperty));
+        var prop = typeof(IAccessorsTestsService).GetProperty(
+            nameof(AccessorsTestsService.StaticProperty)
+        );
 
         prop.Should().BeNull();
     }
@@ -142,9 +163,7 @@ internal class AccessorsTestsService : IAccessorsTestsService
     public int this[string x]
     {
         get => 0;
-        set
-        {
-        }
+        set { }
     }
 
     public string PublicProperty { get; set; }
@@ -159,7 +178,8 @@ internal class AccessorsTestsService : IAccessorsTestsService
 
     public string PropertyWithProtectedGetter { protected get; set; }
 
-    [AutoInterfaceIgnore] public string IgnoredProperty { get; set; }
+    [AutoInterfaceIgnore]
+    public string IgnoredProperty { get; set; }
 
     public static string StaticProperty { get; set; }
 }

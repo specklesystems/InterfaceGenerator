@@ -36,21 +36,13 @@ public class VisibilityModifierTests
 }
 
 [GenerateAutoInterface(VisibilityModifier = "public")]
-internal class ExplicitlyPublicService : IExplicitlyPublicService
-{
-}
+internal class ExplicitlyPublicService : IExplicitlyPublicService { }
 
 [GenerateAutoInterface(VisibilityModifier = "internal")]
-public class ExplicitlyInternalService : IExplicitlyInternalService
-{
-}
+public class ExplicitlyInternalService : IExplicitlyInternalService { }
 
 [GenerateAutoInterface]
-public class ImplicitlyPublicService : IImplicitlyPublicService
-{
-}
+public class ImplicitlyPublicService : IImplicitlyPublicService { }
 
 [GenerateAutoInterface]
-internal class ImplicitlyInternalService : IImplicitlyInternalService
-{
-}
+internal class ImplicitlyInternalService : IImplicitlyInternalService { }

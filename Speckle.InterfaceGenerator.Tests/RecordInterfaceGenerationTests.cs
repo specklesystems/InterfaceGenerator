@@ -17,14 +17,17 @@ public class RecordInterfaceGenerationTests
     [Fact]
     public void RecordProperty_IsGenerated()
     {
-        var prop = typeof(ITestRecord)
-            .GetProperty(nameof(TestRecord.RecordProperty)) ?? throw new InvalidOperationException();
+        var prop =
+            typeof(ITestRecord).GetProperty(nameof(TestRecord.RecordProperty))
+            ?? throw new InvalidOperationException();
 
         prop.Should().NotBeNull();
 
         prop.GetMethod.Should().NotBeNull();
         prop.SetMethod.Should().NotBeNull();
-        prop.SetMethod?.ReturnParameter?.GetRequiredCustomModifiers().Should().Contain(typeof(IsExternalInit));
+        prop.SetMethod?.ReturnParameter?.GetRequiredCustomModifiers()
+            .Should()
+            .Contain(typeof(IsExternalInit));
 
         _sut.RecordProperty.Should().Be(420);
     }
@@ -32,8 +35,7 @@ public class RecordInterfaceGenerationTests
     [Fact]
     public void RecordMethod_IsGenerated()
     {
-        var method = typeof(ITestRecord).GetMethod(
-            nameof(TestRecord.RecordMethod));
+        var method = typeof(ITestRecord).GetMethod(nameof(TestRecord.RecordMethod));
 
         method.Should().NotBeNull();
         method?.ReturnType.Should().Be(typeof(void));
@@ -47,13 +49,12 @@ public class RecordInterfaceGenerationTests
     [Fact]
     public void Deconstruct_IsGenerated()
     {
-        var method = typeof(ITestRecord).GetMethod(
-            nameof(TestRecord.Deconstruct));
+        var method = typeof(ITestRecord).GetMethod(nameof(TestRecord.Deconstruct));
 
         method.Should().NotBeNull();
         method?.ReturnType.Should().Be(typeof(void));
 
-        var parameters = method?.GetParameters()  ?? throw new InvalidOperationException();
+        var parameters = method?.GetParameters() ?? throw new InvalidOperationException();
         parameters.Length.Should().Be(1);
 
         var parameter = parameters[0];
@@ -65,7 +66,5 @@ public class RecordInterfaceGenerationTests
 [GenerateAutoInterface]
 internal record TestRecord(int RecordProperty) : ITestRecord
 {
-    public void RecordMethod()
-    {
-    }
+    public void RecordMethod() { }
 }

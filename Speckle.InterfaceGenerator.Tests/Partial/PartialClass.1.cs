@@ -1,7 +1,4 @@
 namespace Speckle.InterfaceGenerator.Tests.Partial;
 
 [GenerateAutoInterface]
-internal partial class PartialClass : IPartialClass
-{
-    
-}
+internal partial class PartialClass : IPartialClass { }

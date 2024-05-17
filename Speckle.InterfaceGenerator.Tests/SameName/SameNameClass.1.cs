@@ -9,7 +9,4 @@ namespace InterfaceGenerator.Tests.SameName_1;
 /// qualified names.
 /// </summary>
 [GenerateAutoInterface]
-internal class SameNameClass : ISameNameClass
-{
-    
-}
+internal class SameNameClass : ISameNameClass { }

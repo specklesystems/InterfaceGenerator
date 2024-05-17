@@ -10,16 +10,19 @@ internal static class SymbolExtensions
     public static bool TryGetAttribute(
         this ISymbol symbol,
         INamedTypeSymbol attributeType,
-        out IEnumerable<AttributeData> attributes)
+        out IEnumerable<AttributeData> attributes
+    )
     {
-        attributes = symbol.GetAttributes()
+        attributes = symbol
+            .GetAttributes()
             .Where(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attributeType));
         return attributes.Any();
     }
 
     public static bool HasAttribute(this ISymbol symbol, INamedTypeSymbol attributeType)
     {
-        return symbol.GetAttributes()
+        return symbol
+            .GetAttributes()
             .Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attributeType));
     }
 
@@ -47,7 +50,12 @@ internal static class SymbolExtensions
                 stringBuilder.Insert(0, '.');
             }
 
-            stringBuilder.Insert(0, symbol.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat));
+            stringBuilder.Insert(
+                0,
+                symbol.OriginalDefinition.ToDisplayString(
+                    SymbolDisplayFormat.MinimallyQualifiedFormat
+                )
+            );
             symbol = symbol.ContainingSymbol;
         }
 

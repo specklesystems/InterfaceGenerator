@@ -19,8 +19,9 @@ public class MethodGenerationTests
     [Fact]
     public void VoidMethod_IsImplemented()
     {
-        var method = typeof(IMethodsTestService).GetMethod(
-            nameof(MethodsTestService.VoidMethod)) ?? throw new InvalidOperationException();
+        var method =
+            typeof(IMethodsTestService).GetMethod(nameof(MethodsTestService.VoidMethod))
+            ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -34,8 +35,10 @@ public class MethodGenerationTests
     [Fact]
     public void VoidMethodWithKeywordParam_IsImplemented()
     {
-        var method = typeof(IMethodsTestService).GetMethod(
-            nameof(MethodsTestService.VoidMethodWithKeywordParam)) ?? throw new InvalidOperationException();
+        var method =
+            typeof(IMethodsTestService).GetMethod(
+                nameof(MethodsTestService.VoidMethodWithKeywordParam)
+            ) ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -52,9 +55,11 @@ public class MethodGenerationTests
     [Fact]
     public void VoidMethodWithParams_IsImplemented()
     {
-        var method = typeof(IMethodsTestService).GetMethod(
-            nameof(MethodsTestService.VoidMethodWithParams),
-            [typeof(string), typeof(string)]) ?? throw new InvalidOperationException();
+        var method =
+            typeof(IMethodsTestService).GetMethod(
+                nameof(MethodsTestService.VoidMethodWithParams),
+                [typeof(string), typeof(string)]
+            ) ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -69,15 +74,20 @@ public class MethodGenerationTests
     [Fact]
     public void VoidMethodWithOutParam_IsImplemented()
     {
-        var method = typeof(IMethodsTestService).GetMethod(
-            nameof(MethodsTestService.VoidMethodWithOutParam),
-            [typeof(string).MakeByRefType()]) ?? throw new InvalidOperationException();
+        var method =
+            typeof(IMethodsTestService).GetMethod(
+                nameof(MethodsTestService.VoidMethodWithOutParam),
+                [typeof(string).MakeByRefType()]
+            ) ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
 
         var parameters = method.GetParameters();
-        parameters.Select(x => x.ParameterType).Should().AllBeEquivalentTo(typeof(string).MakeByRefType());
+        parameters
+            .Select(x => x.ParameterType)
+            .Should()
+            .AllBeEquivalentTo(typeof(string).MakeByRefType());
         parameters.Should().HaveCount(1);
         parameters[0].IsOut.Should().BeTrue();
 
@@ -87,15 +97,20 @@ public class MethodGenerationTests
     [Fact]
     public void VoidMethodWithInParam_IsImplemented()
     {
-        var method = typeof(IMethodsTestService).GetMethod(
-            nameof(MethodsTestService.VoidMethodWithInParam),
-            [typeof(string).MakeByRefType()]) ?? throw new InvalidOperationException();
+        var method =
+            typeof(IMethodsTestService).GetMethod(
+                nameof(MethodsTestService.VoidMethodWithInParam),
+                [typeof(string).MakeByRefType()]
+            ) ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
 
         var parameters = method.GetParameters();
-        parameters.Select(x => x.ParameterType).Should().AllBeEquivalentTo(typeof(string).MakeByRefType());
+        parameters
+            .Select(x => x.ParameterType)
+            .Should()
+            .AllBeEquivalentTo(typeof(string).MakeByRefType());
         parameters.Should().HaveCount(1);
         parameters[0].IsIn.Should().BeTrue();
 
@@ -106,15 +121,20 @@ public class MethodGenerationTests
     [Fact]
     public void VoidMethodWithRefParam_IsImplemented()
     {
-        var method = typeof(IMethodsTestService).GetMethod(
-            nameof(MethodsTestService.VoidMethodWithRefParam),
-            [typeof(string).MakeByRefType()]) ?? throw new InvalidOperationException();
+        var method =
+            typeof(IMethodsTestService).GetMethod(
+                nameof(MethodsTestService.VoidMethodWithRefParam),
+                [typeof(string).MakeByRefType()]
+            ) ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
 
         var parameters = method.GetParameters();
-        parameters.Select(x => x.ParameterType).Should().AllBeEquivalentTo(typeof(string).MakeByRefType());
+        parameters
+            .Select(x => x.ParameterType)
+            .Should()
+            .AllBeEquivalentTo(typeof(string).MakeByRefType());
         parameters.Should().HaveCount(1);
         parameters[0].IsIn.Should().BeFalse();
         parameters[0].IsOut.Should().BeFalse();
@@ -126,8 +146,9 @@ public class MethodGenerationTests
     [Fact]
     public void StringMethod_IsImplemented()
     {
-        var method = typeof(IMethodsTestService).GetMethod(
-            nameof(MethodsTestService.StringMethod)) ?? throw new InvalidOperationException();
+        var method =
+            typeof(IMethodsTestService).GetMethod(nameof(MethodsTestService.StringMethod))
+            ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(string));
@@ -142,8 +163,8 @@ public class MethodGenerationTests
     public void GenericVoidMethod_IsImplemented()
     {
         var method = typeof(IMethodsTestService)
-                     .GetMethods()
-                     .First(x => x.Name == nameof(MethodsTestService.GenericVoidMethod));
+            .GetMethods()
+            .First(x => x.Name == nameof(MethodsTestService.GenericVoidMethod));
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -160,8 +181,8 @@ public class MethodGenerationTests
     public void GenericVoidMethodWithGenericParam_IsImplemented()
     {
         var method = typeof(IMethodsTestService)
-                     .GetMethods()
-                     .First(x => x.Name == nameof(MethodsTestService.GenericVoidMethodWithGenericParam));
+            .GetMethods()
+            .First(x => x.Name == nameof(MethodsTestService.GenericVoidMethodWithGenericParam));
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -180,8 +201,8 @@ public class MethodGenerationTests
     public void GenericVoidMethodWithConstraints_IsImplemented()
     {
         var method = typeof(IMethodsTestService)
-                     .GetMethods()
-                     .First(x => x.Name == nameof(MethodsTestService.GenericVoidMethodWithConstraints));
+            .GetMethods()
+            .First(x => x.Name == nameof(MethodsTestService.GenericVoidMethodWithConstraints));
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -206,8 +227,8 @@ public class MethodGenerationTests
     public void VoidMethodWithOptionalParams_IsImplemented()
     {
         var method = typeof(IMethodsTestService)
-                     .GetMethods()
-                     .First(x => x.Name == nameof(MethodsTestService.VoidMethodWithOptionalParams));
+            .GetMethods()
+            .First(x => x.Name == nameof(MethodsTestService.VoidMethodWithOptionalParams));
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -226,7 +247,7 @@ public class MethodGenerationTests
         parameters[7].DefaultValue.Should().Be(true);
         parameters[8].DefaultValue.Should().Be(false);
         parameters[9].DefaultValue.Should().Be(null);
-        
+
         _sut.VoidMethodWithOptionalParams();
     }
 
@@ -234,8 +255,8 @@ public class MethodGenerationTests
     public void VoidMethodWithExpandingParam_IsImplemented()
     {
         var method = typeof(IMethodsTestService)
-                     .GetMethods()
-                     .First(x => x.Name == nameof(MethodsTestService.VoidMethodWithExpandingParam));
+            .GetMethods()
+            .First(x => x.Name == nameof(MethodsTestService.VoidMethodWithExpandingParam));
 
         method.ReturnType.Should().Be(typeof(void));
 
@@ -249,8 +270,8 @@ public class MethodGenerationTests
     public void IgnoreMethod_IsOmitted()
     {
         var method = typeof(IMethodsTestService)
-                     .GetMethods()
-                     .FirstOrDefault(x => x.Name == nameof(MethodsTestService.IgnoredMethod));
+            .GetMethods()
+            .FirstOrDefault(x => x.Name == nameof(MethodsTestService.IgnoredMethod));
 
         method.Should().BeNull();
     }
@@ -259,8 +280,8 @@ public class MethodGenerationTests
     public void StaticMethod_IsOmitted()
     {
         var method = typeof(IMethodsTestService)
-                     .GetMethods()
-                     .FirstOrDefault(x => x.Name == nameof(MethodsTestService.StaticMethod));
+            .GetMethods()
+            .FirstOrDefault(x => x.Name == nameof(MethodsTestService.StaticMethod));
 
         method.Should().BeNull();
     }
@@ -271,49 +292,33 @@ internal class MethodsTestService : IMethodsTestService
 {
     public const string StringConstant = "Const";
 
-    public void VoidMethod()
-    {
-    }
+    public void VoidMethod() { }
 
-    public void VoidMethodWithParams(string a, string b)
-    {
-    }
+    public void VoidMethodWithParams(string a, string b) { }
 
-    public void VoidMethodWithKeywordParam(string @void)
-    {
-    }
+    public void VoidMethodWithKeywordParam(string @void) { }
 
     public void VoidMethodWithOutParam(out string a)
     {
         a = default;
     }
 
-    public void VoidMethodWithRefParam(ref string a)
-    {
-    }
+    public void VoidMethodWithRefParam(ref string a) { }
 
-    public void VoidMethodWithInParam(in string a)
-    {
-    }
+    public void VoidMethodWithInParam(in string a) { }
 
     public string StringMethod()
     {
         return string.Empty;
     }
 
-    public void GenericVoidMethod<TX, TY>()
-    {
-    }
+    public void GenericVoidMethod<TX, TY>() { }
 
-    public void GenericVoidMethodWithGenericParam<TX, TY>(TX a)
-    {
-    }
+    public void GenericVoidMethodWithGenericParam<TX, TY>(TX a) { }
 
     public void GenericVoidMethodWithConstraints<TX, TY>()
         where TX : class
-        where TY : class, TX, new()
-    {
-    }
+        where TY : class, TX, new() { }
 
     public void VoidMethodWithOptionalParams(
         string stringLiteral = "cGFyYW0=",
@@ -325,25 +330,17 @@ internal class MethodsTestService : IMethodsTestService
         bool falseLiteral = false,
         bool? nullableTrueLiteral = true,
         bool? nullableFalseLiteral = false,
-        bool? nullableNullBoolLiteral = null)
-    {
-    }
+        bool? nullableNullBoolLiteral = null
+    ) { }
 
-    public void VoidMethodWithExpandingParam(params string[] strings)
-    {
-    }
+    public void VoidMethodWithExpandingParam(params string[] strings) { }
 
     [AutoInterfaceIgnore]
-    public void IgnoredMethod()
-    {
-    }
+    public void IgnoredMethod() { }
 
-    public static void StaticMethod()
-    {
-    }
+    public static void StaticMethod() { }
 }
 
 [GenerateAutoInterface]
-internal class MethodsTestServiceGeneric<T> : IMethodsTestServiceGeneric<T> where T : class
-{
-}
+internal class MethodsTestServiceGeneric<T> : IMethodsTestServiceGeneric<T>
+    where T : class { }

@@ -6,20 +6,17 @@ namespace Speckle.InterfaceGenerator;
 
 internal static class TextWriterExtensions
 {
-        
-    public static void WriteJoin<T>(
-        this TextWriter writer,
-        string separator,
-        IEnumerable<T> values)
+    public static void WriteJoin<T>(this TextWriter writer, string separator, IEnumerable<T> values)
     {
         writer.WriteJoin(separator, values, (w, x) => w.Write(x));
     }
-        
+
     public static void WriteJoin<T>(
         this TextWriter writer,
         string separator,
         IEnumerable<T> values,
-        Action<TextWriter, T> writeAction)
+        Action<TextWriter, T> writeAction
+    )
     {
         using var enumerator = values.GetEnumerator();
 
