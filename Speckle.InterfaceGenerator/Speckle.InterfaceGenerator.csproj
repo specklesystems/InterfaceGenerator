@@ -10,7 +10,7 @@
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
 		<RootNamespace>Speckle.InterfaceGenerator</RootNamespace>
-        <EnforoceExtendedAnalyzerRules>true</EnforoceExtendedAnalyzerRules>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     </PropertyGroup>
     
     <PropertyGroup>
