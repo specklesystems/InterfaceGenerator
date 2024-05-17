@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using FluentAssertions;
 using Xunit;
@@ -160,6 +161,36 @@ public class MethodGenerationTests
     }
 
     [Fact]
+    public void StringMethodNullable_IsImplemented()
+    {
+        var method =
+            typeof(IMethodsTestService).GetMethod(nameof(MethodsTestService.StringMethodNullable))
+            ?? throw new InvalidOperationException();
+
+        method.Should().NotBeNull();
+        method.ReturnType.Should().Be(typeof(string));
+        IsNullable(method.ReturnType).Should().BeTrue();
+
+        var parameters = method.GetParameters();
+        parameters.Should().BeEmpty();
+
+        var _ = _sut.StringMethod();
+    }
+
+    private static bool IsNullable(Type type)
+    {
+        var nullableContextAttribute = type.GetCustomAttribute<NullableContextAttribute>();
+
+        // NullableContextAttribute exists and has a flag indicating nullable annotations
+        if (nullableContextAttribute != null && nullableContextAttribute.Flag == 1)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    [Fact]
     public void GenericVoidMethod_IsImplemented()
     {
         var method = typeof(IMethodsTestService)
@@ -310,6 +341,11 @@ internal class MethodsTestService : IMethodsTestService
     public string StringMethod()
     {
         return string.Empty;
+    }
+
+    public string? StringMethodNullable()
+    {
+        return null;
     }
 
     public void GenericVoidMethod<TX, TY>() { }

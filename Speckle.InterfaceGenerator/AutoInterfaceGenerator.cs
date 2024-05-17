@@ -176,10 +176,8 @@ public class AutoInterfaceGenerator : ISourceGenerator
         var visibilityModifier = InferVisibilityModifier(implTypeSymbol, attributeData);
 
         //https://stackoverflow.com/questions/55492214/the-annotation-for-nullable-reference-types-should-only-be-used-in-code-within-a fix for nullable
-        if (implTypeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
-        {
-            codeWriter.WriteLine("#nullable enable");
-        }
+
+        codeWriter.WriteLine("#nullable enable");
         codeWriter.WriteLine("namespace {0}", namespaceName);
         codeWriter.WriteLine("{");
 
@@ -198,10 +196,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         --codeWriter.Indent;
 
         codeWriter.WriteLine("}");
-        if (implTypeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
-        {
-            codeWriter.WriteLine("#nullable restore");
-        }
+        codeWriter.WriteLine("#nullable restore");
 
         codeWriter.Flush();
         stream.Seek(0, SeekOrigin.Begin);
