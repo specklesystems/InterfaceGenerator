@@ -1,17 +1,16 @@
-﻿namespace InterfaceGenerator
+﻿namespace Speckle.InterfaceGenerator;
+
+internal class Attributes
 {
-    
-    internal class Attributes
-    {
-        public const string AttributesNamespace = nameof(InterfaceGenerator);
+    public const string AttributesNamespace = "Speckle.InterfaceGenerator";
 
-        public const string GenerateAutoInterfaceClassname = "GenerateAutoInterfaceAttribute";
-        public const string AutoInterfaceIgnoreAttributeClassname = "AutoInterfaceIgnoreAttribute";
+    public const string GenerateAutoInterfaceClassname = "GenerateAutoInterfaceAttribute";
+    public const string AutoInterfaceIgnoreAttributeClassname = "AutoInterfaceIgnoreAttribute";
 
-        public const string VisibilityModifierPropName = "VisibilityModifier";
-        public const string InterfaceNamePropName = "Name";
+    public const string VisibilityModifierPropName = "VisibilityModifier";
+    public const string InterfaceNamePropName = "Name";
         
-        public static readonly string AttributesSourceCode = $@"
+    public static readonly string AttributesSourceCode = $@"
 
 using System;
 using System.Diagnostics;
@@ -39,5 +38,4 @@ namespace {AttributesNamespace}
     }}
 }}
 ";
-    }
 }

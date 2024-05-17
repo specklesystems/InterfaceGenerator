@@ -1,23 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>netstandard2</TargetFramework>
-        <LangVersion>9.0</LangVersion>
+        <LangVersion>Latest</LangVersion>
         <Nullable>enable</Nullable>
-        <PackageVersion>1.0.14</PackageVersion>
+        <PackageVersion>0.9.0</PackageVersion>
 
 		<developmentDependency>true</developmentDependency>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
+		<RootNamespace>Speckle.InterfaceGenerator</RootNamespace>
     </PropertyGroup>
     
     <PropertyGroup>
-        <Authors>R. David</Authors>
-        <Title>InterfaceGenerator</Title>
+        <Title>Speckle.InterfaceGenerator</Title>
         <Description>A source generator that creates interfaces from implementations</Description>
-        <PackageProjectUrl>https://github.com/daver32/InterfaceGenerator</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/daver32/InterfaceGenerator/blob/master/LICENSE</PackageLicenseUrl>
-        <RepositoryUrl>https://github.com/daver32/InterfaceGenerator</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/specklesystems/InterfaceGenerator</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/specklesystems/InterfaceGenerator/blob/master/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/specklesystems/InterfaceGenerator</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
     </PropertyGroup>
 

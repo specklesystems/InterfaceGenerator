@@ -1,8 +1,9 @@
+using System;
 using System.Runtime.CompilerServices;
 using FluentAssertions;
 using Xunit;
 
-namespace InterfaceGenerator.Tests;
+namespace Speckle.InterfaceGenerator.Tests;
 
 public class RecordInterfaceGenerationTests
 {
@@ -17,13 +18,13 @@ public class RecordInterfaceGenerationTests
     public void RecordProperty_IsGenerated()
     {
         var prop = typeof(ITestRecord)
-            .GetProperty(nameof(TestRecord.RecordProperty))!;
+            .GetProperty(nameof(TestRecord.RecordProperty)) ?? throw new InvalidOperationException();
 
         prop.Should().NotBeNull();
 
         prop.GetMethod.Should().NotBeNull();
         prop.SetMethod.Should().NotBeNull();
-        prop.SetMethod!.ReturnParameter!.GetRequiredCustomModifiers().Should().Contain(typeof(IsExternalInit));
+        prop.SetMethod?.ReturnParameter?.GetRequiredCustomModifiers().Should().Contain(typeof(IsExternalInit));
 
         _sut.RecordProperty.Should().Be(420);
     }
@@ -35,9 +36,9 @@ public class RecordInterfaceGenerationTests
             nameof(TestRecord.RecordMethod));
 
         method.Should().NotBeNull();
-        method!.ReturnType.Should().Be(typeof(void));
+        method?.ReturnType.Should().Be(typeof(void));
 
-        var parameters = method.GetParameters();
+        var parameters = method?.GetParameters();
         parameters.Should().BeEmpty();
 
         _sut.RecordMethod();
@@ -50,9 +51,9 @@ public class RecordInterfaceGenerationTests
             nameof(TestRecord.Deconstruct));
 
         method.Should().NotBeNull();
-        method!.ReturnType.Should().Be(typeof(void));
+        method?.ReturnType.Should().Be(typeof(void));
 
-        var parameters = method.GetParameters();
+        var parameters = method?.GetParameters()  ?? throw new InvalidOperationException();
         parameters.Length.Should().Be(1);
 
         var parameter = parameters[0];

@@ -1,48 +1,47 @@
 ﻿using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
-namespace InterfaceGenerator
+namespace Speckle.InterfaceGenerator;
+
+internal static class TypeParameterSymbolExtensions
 {
-    internal static class TypeParameterSymbolExtensions
+    public static IEnumerable<string> EnumGenericConstraints(this ITypeParameterSymbol symbol)
     {
-        public static IEnumerable<string> EnumGenericConstraints(this ITypeParameterSymbol symbol)
+        // the class/struct/unmanaged/notnull constraint has to be the last
+        if (symbol.HasNotNullConstraint)
         {
-            // the class/struct/unmanaged/notnull constraint has to be the last
-            if (symbol.HasNotNullConstraint)
-            {
-                yield return "notnull";
-            }
+            yield return "notnull";
+        }
             
-            if (symbol.HasValueTypeConstraint)
-            {
-                yield return "struct";
-            }
+        if (symbol.HasValueTypeConstraint)
+        {
+            yield return "struct";
+        }
             
-            if (symbol.HasUnmanagedTypeConstraint)
-            {
-                yield return "unmanaged";
-            }
+        if (symbol.HasUnmanagedTypeConstraint)
+        {
+            yield return "unmanaged";
+        }
             
-            if (symbol.HasReferenceTypeConstraint)
-            {
-                yield return symbol.ReferenceTypeConstraintNullableAnnotation == NullableAnnotation.Annotated
-                    ? "class?"
-                    : "class";
-            }
+        if (symbol.HasReferenceTypeConstraint)
+        {
+            yield return symbol.ReferenceTypeConstraintNullableAnnotation == NullableAnnotation.Annotated
+                ? "class?"
+                : "class";
+        }
 
             
-            // types go in the middle
-            foreach (var constraintType in symbol.ConstraintTypes)
-            {
-                yield return constraintType.ToDisplayString();
-            }
+        // types go in the middle
+        foreach (var constraintType in symbol.ConstraintTypes)
+        {
+            yield return constraintType.ToDisplayString();
+        }
             
             
-            // the new() constraint has to be the last
-            if (symbol.HasConstructorConstraint)
-            {
-                yield return "new()";
-            }
+        // the new() constraint has to be the last
+        if (symbol.HasConstructorConstraint)
+        {
+            yield return "new()";
         }
     }
 }

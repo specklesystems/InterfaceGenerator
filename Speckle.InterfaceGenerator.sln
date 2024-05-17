@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InterfaceGenerator", "InterfaceGenerator\InterfaceGenerator.csproj", "{D40E2D60-5580-42D2-8316-F5AAA42CFBF6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Speckle.InterfaceGenerator", "InterfaceGenerator\Speckle.InterfaceGenerator.csproj", "{D40E2D60-5580-42D2-8316-F5AAA42CFBF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InterfaceGenerator.Tests", "InterfaceGenerator.Tests\InterfaceGenerator.Tests.csproj", "{D39C541E-9EDC-41E9-BBD8-FAA9DA602CC0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Speckle.InterfaceGenerator.Tests", "InterfaceGenerator.Tests\Speckle.InterfaceGenerator.Tests.csproj", "{D39C541E-9EDC-41E9-BBD8-FAA9DA602CC0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

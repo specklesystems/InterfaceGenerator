@@ -3,7 +3,7 @@ using System.Reflection;
 using FluentAssertions;
 using Xunit;
 
-namespace InterfaceGenerator.Tests;
+namespace Speckle.InterfaceGenerator.Tests;
 
 public class GenericInterfaceTests
 {

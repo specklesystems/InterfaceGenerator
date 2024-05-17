@@ -1,9 +1,8 @@
-using System;
 using FluentAssertions;
-using InterfaceGenerator.Tests.Partial;
+using Speckle.InterfaceGenerator.Tests.Partial;
 using Xunit;
 
-namespace InterfaceGenerator.Tests;
+namespace Speckle.InterfaceGenerator.Tests;
 
 public class PartialClassTests
 {

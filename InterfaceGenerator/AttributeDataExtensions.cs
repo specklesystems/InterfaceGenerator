@@ -1,14 +1,13 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
-namespace InterfaceGenerator
+namespace Speckle.InterfaceGenerator;
+
+internal static class AttributeDataExtensions
 {
-    internal static class AttributeDataExtensions
+    public static string? GetNamedParamValue(this AttributeData attributeData, string paramName)
     {
-        public static string? GetNamedParamValue(this AttributeData attributeData, string paramName)
-        {
-            var pair = attributeData.NamedArguments.FirstOrDefault(x => x.Key == paramName);
-            return pair.Value.Value?.ToString();
-        }
+        var pair = attributeData.NamedArguments.FirstOrDefault(x => x.Key == paramName);
+        return pair.Value.Value?.ToString();
     }
 }

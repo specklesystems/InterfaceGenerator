@@ -5,7 +5,7 @@ using System.Text;
 using FluentAssertions;
 using Xunit;
 
-namespace InterfaceGenerator.Tests;
+namespace Speckle.InterfaceGenerator.Tests;
 
 public class MethodGenerationTests
 {
@@ -20,7 +20,7 @@ public class MethodGenerationTests
     public void VoidMethod_IsImplemented()
     {
         var method = typeof(IMethodsTestService).GetMethod(
-            nameof(MethodsTestService.VoidMethod))!;
+            nameof(MethodsTestService.VoidMethod)) ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -35,7 +35,7 @@ public class MethodGenerationTests
     public void VoidMethodWithKeywordParam_IsImplemented()
     {
         var method = typeof(IMethodsTestService).GetMethod(
-            nameof(MethodsTestService.VoidMethodWithKeywordParam))!;
+            nameof(MethodsTestService.VoidMethodWithKeywordParam)) ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -54,7 +54,7 @@ public class MethodGenerationTests
     {
         var method = typeof(IMethodsTestService).GetMethod(
             nameof(MethodsTestService.VoidMethodWithParams),
-            new[] { typeof(string), typeof(string) })!;
+            [typeof(string), typeof(string)]) ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -71,7 +71,7 @@ public class MethodGenerationTests
     {
         var method = typeof(IMethodsTestService).GetMethod(
             nameof(MethodsTestService.VoidMethodWithOutParam),
-            new[] { typeof(string).MakeByRefType() })!;
+            [typeof(string).MakeByRefType()]) ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -89,7 +89,7 @@ public class MethodGenerationTests
     {
         var method = typeof(IMethodsTestService).GetMethod(
             nameof(MethodsTestService.VoidMethodWithInParam),
-            new[] { typeof(string).MakeByRefType() })!;
+            [typeof(string).MakeByRefType()]) ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -108,7 +108,7 @@ public class MethodGenerationTests
     {
         var method = typeof(IMethodsTestService).GetMethod(
             nameof(MethodsTestService.VoidMethodWithRefParam),
-            new[] { typeof(string).MakeByRefType() })!;
+            [typeof(string).MakeByRefType()]) ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(void));
@@ -127,7 +127,7 @@ public class MethodGenerationTests
     public void StringMethod_IsImplemented()
     {
         var method = typeof(IMethodsTestService).GetMethod(
-            nameof(MethodsTestService.StringMethod))!;
+            nameof(MethodsTestService.StringMethod)) ?? throw new InvalidOperationException();
 
         method.Should().NotBeNull();
         method.ReturnType.Should().Be(typeof(string));

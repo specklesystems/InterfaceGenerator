@@ -3,66 +3,65 @@ using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 
-namespace InterfaceGenerator
+namespace Speckle.InterfaceGenerator;
+
+internal static class SymbolExtensions
 {
-    internal static class SymbolExtensions
+    public static bool TryGetAttribute(
+        this ISymbol symbol,
+        INamedTypeSymbol attributeType,
+        out IEnumerable<AttributeData> attributes)
     {
-        public static bool TryGetAttribute(
-            this ISymbol symbol,
-            INamedTypeSymbol attributeType,
-            out IEnumerable<AttributeData> attributes)
+        attributes = symbol.GetAttributes()
+            .Where(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attributeType));
+        return attributes.Any();
+    }
+
+    public static bool HasAttribute(this ISymbol symbol, INamedTypeSymbol attributeType)
+    {
+        return symbol.GetAttributes()
+            .Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attributeType));
+    }
+
+    //Ref: https://stackoverflow.com/questions/27105909/get-fully-qualified-metadata-name-in-roslyn
+    public static string GetFullMetadataName(this ISymbol symbol, bool useNameWhenNotFound = false)
+    {
+        if (IsRootNamespace(symbol))
         {
-            attributes = symbol.GetAttributes()
-                               .Where(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attributeType));
-            return attributes.Any();
+            return useNameWhenNotFound ? symbol.Name : string.Empty;
         }
 
-        public static bool HasAttribute(this ISymbol symbol, INamedTypeSymbol attributeType)
-        {
-            return symbol.GetAttributes()
-                         .Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attributeType));
-        }
+        var stringBuilder = new StringBuilder(symbol.MetadataName);
+        var last = symbol;
 
-        //Ref: https://stackoverflow.com/questions/27105909/get-fully-qualified-metadata-name-in-roslyn
-        public static string GetFullMetadataName(this ISymbol symbol, bool useNameWhenNotFound = false)
+        symbol = symbol.ContainingSymbol;
+
+        while (!IsRootNamespace(symbol))
         {
-            if (IsRootNamespace(symbol))
+            if (symbol is ITypeSymbol && last is ITypeSymbol)
             {
-                return useNameWhenNotFound ? symbol.Name : string.Empty;
+                stringBuilder.Insert(0, '+');
+            }
+            else
+            {
+                stringBuilder.Insert(0, '.');
             }
 
-            var stringBuilder = new StringBuilder(symbol.MetadataName);
-            var last = symbol;
-
+            stringBuilder.Insert(0, symbol.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat));
             symbol = symbol.ContainingSymbol;
-
-            while (!IsRootNamespace(symbol))
-            {
-                if (symbol is ITypeSymbol && last is ITypeSymbol)
-                {
-                    stringBuilder.Insert(0, '+');
-                }
-                else
-                {
-                    stringBuilder.Insert(0, '.');
-                }
-
-                stringBuilder.Insert(0, symbol.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat));
-                symbol = symbol.ContainingSymbol;
-            }
-
-            var retVal = stringBuilder.ToString();
-            if (string.IsNullOrWhiteSpace(retVal) && useNameWhenNotFound)
-            {
-                return symbol.Name;
-            }
-
-            return retVal;
         }
 
-        private static bool IsRootNamespace(ISymbol symbol)
+        var retVal = stringBuilder.ToString();
+        if (string.IsNullOrWhiteSpace(retVal) && useNameWhenNotFound)
         {
-            return symbol is INamespaceSymbol { IsGlobalNamespace: true };
+            return symbol.Name;
         }
+
+        return retVal;
+    }
+
+    private static bool IsRootNamespace(ISymbol symbol)
+    {
+        return symbol is INamespaceSymbol { IsGlobalNamespace: true };
     }
 }
