@@ -331,7 +331,7 @@ internal class MethodsTestService : IMethodsTestService
 
     public void VoidMethodWithOutParam(out string a)
     {
-        a = default;
+        a = string.Empty;
     }
 
     public void VoidMethodWithRefParam(ref string a) { }

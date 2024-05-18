@@ -166,21 +166,21 @@ internal class AccessorsTestsService : IAccessorsTestsService
         set { }
     }
 
-    public string PublicProperty { get; set; }
+    public string PublicProperty { get; set; } = string.Empty;
 
-    public string InitOnlyProperty { get; init; }
+    public string InitOnlyProperty { get; init; } = string.Empty;
 
-    public string PropertyWithPrivateSetter { get; private set; }
+    public string PropertyWithPrivateSetter { get; private set; } = string.Empty;
 
-    public string PropertyWithPrivateGetter { private get; set; }
+    public string PropertyWithPrivateGetter { private get; set; } = string.Empty;
 
-    public string PropertyWithProtectedSetter { get; protected set; }
+    public string PropertyWithProtectedSetter { get; protected set; } = string.Empty;
 
-    public string PropertyWithProtectedGetter { protected get; set; }
+    public string PropertyWithProtectedGetter { protected get; set; } = string.Empty;
 
     [AutoInterfaceIgnore]
-    public string IgnoredProperty { get; set; }
+    public string IgnoredProperty { get; set; } = string.Empty;
 
-    public static string StaticProperty { get; set; }
+    public static string StaticProperty { get; set; } = string.Empty;
 }
 // ReSharper enable UnusedMember.Local, ValueParameterNotUsed
