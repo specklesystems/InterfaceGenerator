@@ -13,9 +13,10 @@
         <Title>Speckle.InterfaceGenerator</Title>
         <Description>A source generator that creates interfaces from implementations</Description>
         <PackageProjectUrl>https://github.com/specklesystems/InterfaceGenerator</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/specklesystems/InterfaceGenerator/blob/master/LICENSE</PackageLicenseUrl>
+        <LicenseUrl>https://github.com/specklesystems/InterfaceGenerator/blob/master/LICENSE</LicenseUrl>
         <RepositoryUrl>https://github.com/specklesystems/InterfaceGenerator</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
+        <PackageReadmeFile>readme.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,9 +25,6 @@
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+      <None Include="..\readme.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 </Project>
