@@ -13,19 +13,20 @@ internal class Attributes
     public static readonly string AttributesSourceCode =
         $@"
 
+#pragma warning disable IDE0005
 using System;
 using System.Diagnostics;
 
 #nullable enable
 
-namespace {AttributesNamespace} 
+namespace {AttributesNamespace}
 {{
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
     [Conditional(""CodeGeneration"")]
     internal sealed class {GenerateAutoInterfaceClassname} : Attribute
     {{
-        public string? {VisibilityModifierPropName} {{ get; init; }} 
-        public string? {InterfaceNamePropName} {{ get; init; }} 
+        public string? {VisibilityModifierPropName} {{ get; init; }}
+        public string? {InterfaceNamePropName} {{ get; init; }}
 
         public {GenerateAutoInterfaceClassname}()
         {{
@@ -38,5 +39,7 @@ namespace {AttributesNamespace}
     {{
     }}
 }}
+
+#pragma warning enable IDE0005
 ";
 }
