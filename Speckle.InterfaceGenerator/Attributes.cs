@@ -40,6 +40,6 @@ namespace {AttributesNamespace}
     }}
 }}
 
-#pragma warning enable IDE0005
+#pragma warning restore IDE0005
 ";
 }
