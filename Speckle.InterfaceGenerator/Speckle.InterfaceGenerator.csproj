@@ -3,7 +3,12 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>Latest</LangVersion>
         <Nullable>enable</Nullable>
-        <PackageVersion>0.9.3</PackageVersion>
+        <PackageVersion>0.9.4</PackageVersion>
+        <developmentDependency>true</developmentDependency>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <NoPackageAnalysis>true</NoPackageAnalysis>
+
         <RootNamespace>Speckle.InterfaceGenerator</RootNamespace>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -25,6 +30,10 @@
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-      <None Include="..\readme.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>   
+
+    <ItemGroup>
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="..\readme.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 </Project>
