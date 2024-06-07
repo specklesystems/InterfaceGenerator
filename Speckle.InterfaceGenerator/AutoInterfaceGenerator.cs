@@ -80,7 +80,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
     private static void GenerateAttributes(GeneratorExecutionContext context)
     {
         context.AddSource(
-            Attributes.GenerateAutoInterfaceClassname,
+            $"{Attributes.GenerateAutoInterfaceClassname}.g.cs",
             SourceText.From(Attributes.AttributesSourceCode, Encoding.UTF8)
         );
     }
