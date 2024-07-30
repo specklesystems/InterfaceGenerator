@@ -1,5 +1,7 @@
 // ReSharper disable CheckNamespace
 
+using System;
+using System.Diagnostics.SymbolStore;
 using Speckle.InterfaceGenerator;
 
 namespace InterfaceGenerator.Tests.SameName_1;
@@ -9,4 +11,12 @@ namespace InterfaceGenerator.Tests.SameName_1;
 /// qualified names.
 /// </summary>
 [GenerateAutoInterface]
-internal class SameNameClass : ISameNameClass { }
+public class SameNameClass : ISameNameClass { }
+
+[GenerateAutoInterface]
+public class SameNameClass2 : ISameNameClass2
+{
+    public ISameNameClass Return() => throw new InvalidOperationException();
+    public SymbolToken Return2() => throw new InvalidOperationException();
+
+}
