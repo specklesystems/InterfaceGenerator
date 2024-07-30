@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using FluentAssertions;
@@ -165,6 +167,9 @@ internal class AccessorsTestsService : IAccessorsTestsService
         get => 0;
         set { }
     }
+    public FtpStyleUriParser? SymbolBinder { get; set; }
+    public FtpStyleUriParser SymbolBinder2 { get; set; } = default!;
+    public IEnumerable<FtpStyleUriParser> SymbolBinder3 { get; set; }= default!;
 
     public string PublicProperty { get; set; } = string.Empty;
 

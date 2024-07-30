@@ -22,14 +22,6 @@ public class AutoInterfaceGenerator : ISourceGenerator
     public void Initialize(GeneratorInitializationContext context)
     {
         context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
-
-#if DEBUG
-        if (!Debugger.IsAttached)
-        {
-            // sadly this is Windows only so as of now :(
-            Debugger.Launch();
-        }
-#endif
     }
 
     public void Execute(GeneratorExecutionContext context)
@@ -223,7 +215,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
     private void GenerateInterfaceMemberDefinitions(
         TextWriter writer,
-        INamespaceOrTypeSymbol implTypeSymbol
+        INamedTypeSymbol implTypeSymbol
     )
     {
         foreach (var member in implTypeSymbol.GetMembers())
@@ -238,11 +230,15 @@ public class AutoInterfaceGenerator : ISourceGenerator
                 continue;
             }
 
-            GenerateInterfaceMemberDefinition(writer, member);
+            GenerateInterfaceMemberDefinition(writer, implTypeSymbol, member);
         }
     }
 
-    private static void GenerateInterfaceMemberDefinition(TextWriter writer, ISymbol member)
+    private static void GenerateInterfaceMemberDefinition(
+        TextWriter writer,
+        INamedTypeSymbol owner,
+        ISymbol member
+    )
     {
         switch (member)
         {
@@ -250,7 +246,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
                 GeneratePropertyDefinition(writer, propertySymbol);
                 break;
             case IMethodSymbol methodSymbol:
-                GenerateMethodDefinition(writer, methodSymbol);
+                GenerateMethodDefinition(writer, owner, methodSymbol);
                 break;
         }
     }
@@ -316,8 +312,12 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
         if (propertySymbol.IsIndexer)
         {
-            writer.Write("{0} this[", propertySymbol.Type);
-            writer.WriteJoin(", ", propertySymbol.Parameters, WriteMethodParam);
+            writer.Write("{0} this[", propertySymbol.Type.GetNamespaceAndType());
+            writer.WriteJoin(
+                ", ",
+                propertySymbol.Parameters,
+                (x, p) => WriteMethodParam(x, p, false)
+            );
             writer.Write("] ");
         }
         else
@@ -347,7 +347,11 @@ public class AutoInterfaceGenerator : ISourceGenerator
         writer.WriteLine("}");
     }
 
-    private static void GenerateMethodDefinition(TextWriter writer, IMethodSymbol methodSymbol)
+    private static void GenerateMethodDefinition(
+        TextWriter writer,
+        INamedTypeSymbol owner,
+        IMethodSymbol methodSymbol
+    )
     {
         if (methodSymbol.MethodKind != MethodKind.Ordinary || methodSymbol.IsStatic)
         {
@@ -363,7 +367,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
         WriteSymbolDocsIfPresent(writer, methodSymbol);
 
-        writer.Write("{0} {1}", methodSymbol.ReturnType, methodSymbol.Name); // ex. int Foo
+        writer.Write("{0} {1}", methodSymbol.ReturnType.GetNamespaceAndType(), methodSymbol.Name); // ex. int Foo
 
         if (methodSymbol.IsGenericMethod)
         {
@@ -373,7 +377,17 @@ public class AutoInterfaceGenerator : ISourceGenerator
         }
 
         writer.Write("(");
-        writer.WriteJoin(", ", methodSymbol.Parameters, WriteMethodParam);
+        writer.WriteJoin(
+            ", ",
+            methodSymbol.Parameters,
+            (x, p) =>
+                WriteMethodParam(
+                    x,
+                    p,
+                    owner.TypeParameters.Any(t => t.Name == p.Type.Name)
+                        || methodSymbol.TypeParameters.Any(t => t.Name == p.Type.Name)
+                )
+        );
 
         writer.Write(")");
 
@@ -385,7 +399,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         writer.WriteLine(";");
     }
 
-    private static void WriteMethodParam(TextWriter writer, IParameterSymbol param)
+    private static void WriteMethodParam(TextWriter writer, IParameterSymbol param, bool isGeneric)
     {
         if (param.IsParams)
         {
@@ -405,7 +419,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
                 break;
         }
 
-        writer.Write(param.Type);
+        writer.Write(isGeneric ? param.Type : param.Type.GetNamespaceAndType());
         writer.Write(" ");
 
         if (StringExtensions.IsCSharpKeyword(param.Name))
