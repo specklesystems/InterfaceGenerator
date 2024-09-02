@@ -10,6 +10,10 @@ internal static class SymbolExtensions
     private static readonly HashSet<string> _defaults = new() { "System", "Microsoft" };
     public static string GetNamespaceAndType(this ITypeSymbol typeSymbol)
     {
+        if (typeSymbol is ITypeParameterSymbol t)
+        {
+            return t.Name;
+        }
         if (typeSymbol.SpecialType != SpecialType.None)
         {
             return typeSymbol.ToString();

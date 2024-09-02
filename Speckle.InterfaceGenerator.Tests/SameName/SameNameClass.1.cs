@@ -18,5 +18,6 @@ public class SameNameClass2 : ISameNameClass2
 {
     public ISameNameClass Return() => throw new InvalidOperationException();
     public SymbolToken Return2() => throw new InvalidOperationException();
+    public T GetRequiredService<T>() where T : class  =>  throw new InvalidOperationException();
 
 }
