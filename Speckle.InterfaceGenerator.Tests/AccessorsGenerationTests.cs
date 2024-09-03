@@ -169,7 +169,7 @@ internal class AccessorsTestsService : IAccessorsTestsService
     }
     public FtpStyleUriParser? SymbolBinder { get; set; }
     public FtpStyleUriParser SymbolBinder2 { get; set; } = default!;
-    public IEnumerable<FtpStyleUriParser> SymbolBinder3 { get; set; }= default!;
+    public IEnumerable<FtpStyleUriParser> SymbolBinder3 { get; set; } = default!;
 
     public string PublicProperty { get; set; } = string.Empty;
 

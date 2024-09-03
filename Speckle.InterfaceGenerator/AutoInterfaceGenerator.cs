@@ -313,11 +313,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         if (propertySymbol.IsIndexer)
         {
             writer.Write("{0} this[", propertySymbol.Type.GetNamespaceAndType());
-            writer.WriteJoin(
-                ", ",
-                propertySymbol.Parameters,
-                (x, p) => WriteMethodParam(x, p, false)
-            );
+            writer.WriteJoin(", ", propertySymbol.Parameters, WriteMethodParam);
             writer.Write("] ");
         }
         else
@@ -372,22 +368,15 @@ public class AutoInterfaceGenerator : ISourceGenerator
         if (methodSymbol.IsGenericMethod)
         {
             writer.Write("<");
-            writer.WriteJoin(", ", methodSymbol.TypeParameters.Select(x => x.Name));
+            writer.WriteJoin(
+                ", ",
+                methodSymbol.TypeParameters.Select(x => x.GetNamespaceAndType())
+            );
             writer.Write(">");
         }
 
         writer.Write("(");
-        writer.WriteJoin(
-            ", ",
-            methodSymbol.Parameters,
-            (x, p) =>
-                WriteMethodParam(
-                    x,
-                    p,
-                    owner.TypeParameters.Any(t => t.Name == p.Type.Name)
-                        || methodSymbol.TypeParameters.Any(t => t.Name == p.Type.Name)
-                )
-        );
+        writer.WriteJoin(", ", methodSymbol.Parameters, WriteMethodParam);
 
         writer.Write(")");
 
@@ -399,7 +388,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         writer.WriteLine(";");
     }
 
-    private static void WriteMethodParam(TextWriter writer, IParameterSymbol param, bool isGeneric)
+    private static void WriteMethodParam(TextWriter writer, IParameterSymbol param)
     {
         if (param.IsParams)
         {
@@ -419,7 +408,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
                 break;
         }
 
-        writer.Write(isGeneric ? param.Type : param.Type.GetNamespaceAndType());
+        writer.Write(param.Type.GetNamespaceAndType());
         writer.Write(" ");
 
         if (StringExtensions.IsCSharpKeyword(param.Name))
