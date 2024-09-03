@@ -1,4 +1,4 @@
-# InterfaceGenerator [![NuGet Version](http://img.shields.io/nuget/v/InterfaceGenerator.svg?style=flat)](https://www.nuget.org/packages/InterfaceGenerator/)
+# Speckle.InterfaceGenerator [![NuGet Version](http://img.shields.io/nuget/v/Speckle.InterfaceGenerator.svg?style=flat)](https://www.nuget.org/packages/Speckle.InterfaceGenerator/)
 
 A simple source generator that creates interfaces by implementations. Useful for when you need an interface purely for the sake of mocking, or maybe you're not sure if you'll need the abstraction later on.
 
