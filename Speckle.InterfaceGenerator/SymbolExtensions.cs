@@ -15,7 +15,7 @@ internal static class SymbolExtensions
             return t.Name;
         }
 
-        if (typeSymbol.SpecialType == SpecialType.None)
+        if (typeSymbol.SpecialType != SpecialType.None)
         {
             return typeSymbol.ToString();
         }
