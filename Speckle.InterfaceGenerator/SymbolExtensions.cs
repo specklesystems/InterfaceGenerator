@@ -14,6 +14,17 @@ internal static class SymbolExtensions
         {
             return t.Name;
         }
+
+        if (typeSymbol.SpecialType == SpecialType.None)
+        {
+            return typeSymbol.ToString();
+        }
+
+        if (typeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
+        {
+            return typeSymbol.ToString();
+        }
+
         return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
     }
 
