@@ -230,15 +230,11 @@ public class AutoInterfaceGenerator : ISourceGenerator
                 continue;
             }
 
-            GenerateInterfaceMemberDefinition(writer, implTypeSymbol, member);
+            GenerateInterfaceMemberDefinition(writer, member);
         }
     }
 
-    private static void GenerateInterfaceMemberDefinition(
-        TextWriter writer,
-        INamedTypeSymbol owner,
-        ISymbol member
-    )
+    private static void GenerateInterfaceMemberDefinition(TextWriter writer, ISymbol member)
     {
         switch (member)
         {
@@ -246,7 +242,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
                 GeneratePropertyDefinition(writer, propertySymbol);
                 break;
             case IMethodSymbol methodSymbol:
-                GenerateMethodDefinition(writer, owner, methodSymbol);
+                GenerateMethodDefinition(writer, methodSymbol);
                 break;
         }
     }
@@ -343,11 +339,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         writer.WriteLine("}");
     }
 
-    private static void GenerateMethodDefinition(
-        TextWriter writer,
-        INamedTypeSymbol owner,
-        IMethodSymbol methodSymbol
-    )
+    private static void GenerateMethodDefinition(TextWriter writer, IMethodSymbol methodSymbol)
     {
         if (methodSymbol.MethodKind != MethodKind.Ordinary || methodSymbol.IsStatic)
         {

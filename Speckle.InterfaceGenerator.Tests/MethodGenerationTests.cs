@@ -379,4 +379,7 @@ internal class MethodsTestService : IMethodsTestService
 
 [GenerateAutoInterface]
 internal class MethodsTestServiceGeneric<T> : IMethodsTestServiceGeneric<T>
-    where T : class { }
+    where T : class
+{
+    public T? ResolveInstance(string strongName) => throw new NotImplementedException();
+}

@@ -12,7 +12,7 @@ internal static class SymbolExtensions
     {
         if (typeSymbol is ITypeParameterSymbol t)
         {
-            return t.Name;
+            return t.ToString();
         }
 
         if (typeSymbol.SpecialType != SpecialType.None)
