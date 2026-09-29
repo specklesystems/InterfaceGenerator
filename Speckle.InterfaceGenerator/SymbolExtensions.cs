@@ -7,46 +7,14 @@ namespace Speckle.InterfaceGenerator;
 
 internal static class SymbolExtensions
 {
-    private static readonly HashSet<string> _defaults = new() { "System", "Microsoft" };
-    public static string GetNamespaceAndType(this ITypeSymbol typeSymbol)
-    {
-        if (typeSymbol is ITypeParameterSymbol t)
-        {
-            return t.Name;
-        }
-        if (typeSymbol.SpecialType != SpecialType.None)
-        {
-            return typeSymbol.ToString();
-        }
+    private static readonly SymbolDisplayFormat s_typeFormat =
+        SymbolDisplayFormat.FullyQualifiedFormat.AddMiscellaneousOptions(
+            SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
+        );
 
-        if (typeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
-        {
-            return typeSymbol.ToString();
-        }
-        var namespacez = new List<string>();
-        var ns = typeSymbol.ContainingNamespace;
-        while (ns is not null && !ns.IsGlobalNamespace)
-        {
-            namespacez.Insert(0, ns.Name);
-            ns = ns.ContainingNamespace;
-        }
+    public static string GetNamespaceAndType(this ITypeSymbol typeSymbol) =>
+        typeSymbol.ToDisplayString(s_typeFormat);
 
-        if (namespacez.Any())
-        {
-            if (!_defaults.Contains(namespacez.First()))
-            {
-                var candidate = string.Join(".", namespacez);
-                var name = typeSymbol.ToString();
-                if (!name.StartsWith(candidate))
-                {
-                    name += candidate + "." + name;
-                }
-                return "global::" + name;
-            }
-        }
-
-        return typeSymbol.ToString();
-    }
     public static bool TryGetAttribute(
         this ISymbol symbol,
         INamedTypeSymbol attributeType,
@@ -90,12 +58,7 @@ internal static class SymbolExtensions
                 stringBuilder.Insert(0, '.');
             }
 
-            stringBuilder.Insert(
-                0,
-                symbol.OriginalDefinition.ToDisplayString(
-                    SymbolDisplayFormat.MinimallyQualifiedFormat
-                )
-            );
+            stringBuilder.Insert(0, symbol.MetadataName);
             symbol = symbol.ContainingSymbol;
         }
 

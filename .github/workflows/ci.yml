@@ -2,25 +2,28 @@ name: "Check Build"
 
 on:
   pull_request:
-    
-jobs: 
-  deploy:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
     runs-on: ubuntu-latest
-      
+
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v4
-        
+        uses: actions/checkout@v7
+
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 8.0.x
-          
+          global-json-file: global.json
+
       - name: Restore dependencies
         run: dotnet restore
-        
+
       - name: Build
-        run: dotnet build --configuration Debug --no-restore 
-        
+        run: dotnet build --configuration Debug --no-restore
+
       - name: Test
         run: dotnet test --no-build --configuration Debug --verbosity normal

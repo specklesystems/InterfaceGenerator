@@ -10,36 +10,37 @@ internal class Attributes
     public const string VisibilityModifierPropName = "VisibilityModifier";
     public const string InterfaceNamePropName = "Name";
 
-    public static readonly string AttributesSourceCode =
-        $@"
+    public const string AttributesSourceCode = $$"""
 
-#pragma warning disable IDE0005
-using System;
-using System.Diagnostics;
 
-#nullable enable
+        #pragma warning disable IDE0005
+        using System;
+        using System.Diagnostics;
 
-namespace {AttributesNamespace}
-{{
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
-    [Conditional(""CodeGeneration"")]
-    internal sealed class {GenerateAutoInterfaceClassname} : Attribute
-    {{
-        public string? {VisibilityModifierPropName} {{ get; init; }}
-        public string? {InterfaceNamePropName} {{ get; init; }}
+        #nullable enable
 
-        public {GenerateAutoInterfaceClassname}()
-        {{
-        }}
-    }}
+        namespace {{AttributesNamespace}}
+        {
+            [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
+            [Conditional("CodeGeneration")]
+            internal sealed class {{GenerateAutoInterfaceClassname}} : Attribute
+            {
+                public string? {{VisibilityModifierPropName}} { get; init; }
+                public string? {{InterfaceNamePropName}} { get; init; }
 
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = false)]
-    [Conditional(""CodeGeneration"")]
-    internal sealed class {AutoInterfaceIgnoreAttributeClassname} : Attribute
-    {{
-    }}
-}}
+                public {{GenerateAutoInterfaceClassname}}()
+                {
+                }
+            }
 
-#pragma warning restore IDE0005
-";
+            [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = false)]
+            [Conditional("CodeGeneration")]
+            internal sealed class {{AutoInterfaceIgnoreAttributeClassname}} : Attribute
+            {
+            }
+        }
+
+        #pragma warning restore IDE0005
+
+        """;
 }

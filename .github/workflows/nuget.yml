@@ -2,28 +2,42 @@ name: "Deploy to Nuget.org"
 
 on:
   workflow_dispatch:
-    
-jobs: 
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
   deploy:
     runs-on: ubuntu-latest
-      
+    environment: nuget
+
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v4
-        
+        uses: actions/checkout@v7
+
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 8.0.x
-          
+          global-json-file: global.json
+
       - name: Restore dependencies
         run: dotnet restore
-        
+
       - name: Build
-        run: dotnet build --configuration Release --no-restore Speckle.InterfaceGenerator/Speckle.InterfaceGenerator.csproj
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release
 
       - name: Pack
         run: dotnet pack --no-build --configuration Release Speckle.InterfaceGenerator/Speckle.InterfaceGenerator.csproj --output .
-                
+
+      - name: NuGet login (OIDC)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Push to nuget.org
-        run: dotnet nuget push *.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{secrets.CONNECTORS_NUGET_TOKEN }} --skip-duplicate
+        run: dotnet nuget push *.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --skip-duplicate

@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
 
@@ -31,6 +33,40 @@ public class MethodGenerationTests
         parameters.Should().BeEmpty();
 
         _sut.VoidMethod();
+    }
+
+    [Fact]
+    public void NestedNullableAnnotations_ArePreserved()
+    {
+        var context = new NullabilityInfoContext();
+
+        var returnInfo = context.Create(
+            typeof(IMethodsTestService)
+                .GetMethod(nameof(MethodsTestService.NestedNullableReturn))!
+                .ReturnParameter
+        );
+        returnInfo.GenericTypeArguments.Single().ReadState.Should().Be(NullabilityState.Nullable);
+
+        var paramInfo = context.Create(
+            typeof(IMethodsTestService)
+                .GetMethod(nameof(MethodsTestService.NestedNullableParam))!
+                .GetParameters()
+                .Single()
+        );
+        paramInfo.GenericTypeArguments.Single().ReadState.Should().Be(NullabilityState.Nullable);
+    }
+
+    [Fact]
+    public void VoidMethodWithContextualKeywordParam_IsImplemented()
+    {
+        var method =
+            typeof(IMethodsTestService).GetMethod(
+                nameof(MethodsTestService.VoidMethodWithContextualKeywordParam)
+            ) ?? throw new InvalidOperationException();
+
+        method.GetParameters().Single().Name.Should().Be("field");
+
+        _sut.VoidMethodWithContextualKeywordParam("");
     }
 
     [Fact]
@@ -328,6 +364,12 @@ internal class MethodsTestService : IMethodsTestService
     public void VoidMethodWithParams(string a, string b) { }
 
     public void VoidMethodWithKeywordParam(string @void) { }
+
+    public void VoidMethodWithContextualKeywordParam(string field) { }
+
+    public Task<string?> NestedNullableReturn() => Task.FromResult<string?>(null);
+
+    public void NestedNullableParam(List<string?> values) { }
 
     public void VoidMethodWithOutParam(out string a)
     {

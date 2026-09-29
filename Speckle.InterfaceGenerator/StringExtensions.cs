@@ -39,6 +39,7 @@ internal static class StringExtensions
             case "explicit":
             case "extern":
             case "false":
+            case "field":
             case "finally":
             case "fixed":
             case "float":

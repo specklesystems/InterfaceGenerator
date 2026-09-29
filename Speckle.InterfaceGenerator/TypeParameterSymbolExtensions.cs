@@ -34,7 +34,7 @@ internal static class TypeParameterSymbolExtensions
         // types go in the middle
         foreach (var constraintType in symbol.ConstraintTypes)
         {
-            yield return constraintType.ToDisplayString();
+            yield return constraintType.GetNamespaceAndType();
         }
 
         // the new() constraint has to be the last
