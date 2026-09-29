@@ -214,6 +214,53 @@ public class GeneratorDriverTests
         GetProblems(source).Should().BeEmpty();
     }
 
+    [Fact]
+    public void EnumDefaultValue_GeneratesCompilableInterface()
+    {
+        const string source = """
+            namespace Sample
+            {
+                public enum LogLevel { Debug, Info, Warning }
+
+                [Speckle.InterfaceGenerator.GenerateAutoInterface]
+                public class Service : IService
+                {
+                    public void Log(LogLevel level = LogLevel.Warning) { }
+
+                    public void LogMaybe(LogLevel? level = LogLevel.Info) { }
+                }
+            }
+            """;
+
+        GetProblems(source).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void StringAndCharDefaultValues_AreEscaped()
+    {
+        const string source = """
+            namespace Sample
+            {
+                [Speckle.InterfaceGenerator.GenerateAutoInterface]
+                public class Service : IService
+                {
+                    public void Quote(string text = "say \"hi\"") { }
+
+                    public void Path(string path = @"C:\temp") { }
+
+                    public void Char(char c = '\'') { }
+                }
+            }
+            """;
+
+        var (problems, generated) = RunGenerator(source);
+
+        problems.Should().BeEmpty();
+        generated.Should().Contain("""string text = "say \"hi\"" """.TrimEnd());
+        generated.Should().Contain("""string path = "C:\\temp" """.TrimEnd());
+        generated.Should().Contain("""char c = '\''""");
+    }
+
     private static string[] GetProblems(string source) => RunGenerator(source).Problems;
 
     private static (string[] Problems, string Generated) RunGenerator(string source)

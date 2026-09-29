@@ -423,37 +423,38 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
     private static void WriteParamExplicitDefaultValue(TextWriter writer, IParameterSymbol param)
     {
-        if (param.ExplicitDefaultValue is null)
+        writer.Write(" = ");
+        writer.Write(FormatDefaultValue(param.Type, param.ExplicitDefaultValue));
+    }
+
+    private static string FormatDefaultValue(ITypeSymbol type, object? value)
+    {
+        if (value is null)
         {
-            writer.Write(" = default");
+            return "default";
         }
-        else
-        {
-            switch (param.Type.Name)
+
+        var valueType = type
+            is INamedTypeSymbol
             {
-                case nameof(String):
-                    writer.Write(" = \"{0}\"", param.ExplicitDefaultValue);
-                    break;
-                case nameof(Single):
-                    writer.Write(" = {0}f", param.ExplicitDefaultValue);
-                    break;
-                case nameof(Double):
-                    writer.Write(" = {0}d", param.ExplicitDefaultValue);
-                    break;
-                case nameof(Decimal):
-                    writer.Write(" = {0}m", param.ExplicitDefaultValue);
-                    break;
-                case nameof(Boolean):
-                    writer.Write(" = {0}", param.ExplicitDefaultValue.ToString().ToLower());
-                    break;
-                case nameof(Nullable<bool>):
-                    writer.Write(" = {0}", param.ExplicitDefaultValue.ToString().ToLower());
-                    break;
-                default:
-                    writer.Write(" = {0}", param.ExplicitDefaultValue);
-                    break;
-            }
+                OriginalDefinition.SpecialType: SpecialType.System_Nullable_T,
+            } nullable
+            ? nullable.TypeArguments[0]
+            : type;
+
+        if (valueType.TypeKind == TypeKind.Enum)
+        {
+            return LiteralFormatter.FormatEnum(valueType, value);
         }
+
+        var literal = LiteralFormatter.FormatPrimitive(value);
+        return valueType.SpecialType switch
+        {
+            SpecialType.System_Single => literal + "f",
+            SpecialType.System_Double => literal + "d",
+            SpecialType.System_Decimal => literal + "m",
+            _ => literal,
+        };
     }
 
     private static void WriteTypeParameterConstraints(
