@@ -91,6 +91,46 @@ public class GeneratorDriverTests
     }
 
     [Fact]
+    public void NullableTypeParameter_GeneratesMatchingInterface()
+    {
+        const string SOURCE = """
+            namespace Sample
+            {
+                [Speckle.InterfaceGenerator.GenerateAutoInterface]
+                public class Service<T> : IService<T>
+                    where T : class
+                {
+                    public T? Resolve(string name) => null;
+                }
+            }
+            """;
+
+        GetProblems(SOURCE).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TypeArgumentShadowedByNamespace_GeneratesCompilableInterface()
+    {
+        const string SOURCE = """
+            namespace Rhino.Geometry
+            {
+                public class Mesh { }
+            }
+
+            namespace Speckle.Converters.Rhino
+            {
+                [Speckle.InterfaceGenerator.GenerateAutoInterface]
+                public class MeshConverter : IMeshConverter
+                {
+                    public System.Collections.Generic.List<global::Rhino.Geometry.Mesh> Convert() => [];
+                }
+            }
+            """;
+
+        GetProblems(SOURCE).Should().BeEmpty();
+    }
+
+    [Fact]
     public void NestedNullableTypes_GenerateMatchingInterface()
     {
         const string SOURCE = """
