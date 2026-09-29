@@ -310,17 +310,13 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
         if (propertySymbol.IsIndexer)
         {
-            writer.Write("{0} this[", propertySymbol.Type.GetNamespaceAndType());
+            writer.Write("{0} this[", propertySymbol.Type.ToTypeReference());
             writer.WriteJoin(", ", propertySymbol.Parameters, WriteMethodParam);
             writer.Write("] ");
         }
         else
         {
-            writer.Write(
-                "{0} {1} ",
-                propertySymbol.Type.GetNamespaceAndType(),
-                propertySymbol.Name
-            ); // ex. int Foo
+            writer.Write("{0} {1} ", propertySymbol.Type.ToTypeReference(), propertySymbol.Name);
         }
 
         writer.Write("{ ");
@@ -363,7 +359,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         writer.WriteAttributes(methodSymbol.GetAttributes());
         writer.WriteAttributes(methodSymbol.GetReturnTypeAttributes(), "return");
 
-        writer.Write("{0} {1}", methodSymbol.ReturnType.GetNamespaceAndType(), methodSymbol.Name); // ex. int Foo
+        writer.Write("{0} {1}", methodSymbol.ReturnType.ToTypeReference(), methodSymbol.Name);
 
         if (methodSymbol.IsGenericMethod)
         {
@@ -407,7 +403,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
                 break;
         }
 
-        writer.Write(param.Type.GetNamespaceAndType());
+        writer.Write(param.Type.ToTypeReference());
         writer.Write(" ");
 
         if (StringExtensions.IsCSharpKeyword(param.Name))

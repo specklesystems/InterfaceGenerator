@@ -12,7 +12,7 @@ internal static class SymbolExtensions
             SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
         );
 
-    public static string GetNamespaceAndType(this ITypeSymbol typeSymbol) =>
+    public static string ToTypeReference(this ITypeSymbol typeSymbol) =>
         typeSymbol.ToDisplayString(s_typeFormat);
 
     public static bool TryGetAttribute(
