@@ -97,12 +97,11 @@ internal static class AttributeWriterExtensions
         return constant.Kind switch
         {
             TypedConstantKind.Primitive => FormatPrimitive(constant.Value),
-            TypedConstantKind.Enum
-                => $"({constant.Type!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})({FormatPrimitive(constant.Value)})",
-            _
-                => throw new NotSupportedException(
-                    $"Attribute argument of kind {constant.Kind} is not supported"
-                ),
+            TypedConstantKind.Enum =>
+                $"({constant.Type!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})({FormatPrimitive(constant.Value)})",
+            _ => throw new NotSupportedException(
+                $"Attribute argument of kind {constant.Kind} is not supported"
+            ),
         };
     }
 
