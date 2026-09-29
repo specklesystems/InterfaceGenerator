@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using FluentAssertions;
-using FluentAssertions.Common;
+using AwesomeAssertions;
+using AwesomeAssertions.Common;
 using Xunit;
 
 namespace Speckle.InterfaceGenerator.Tests;

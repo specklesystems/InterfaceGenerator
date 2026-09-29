@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Reflection;
-using FluentAssertions;
+using AwesomeAssertions;
 using Xunit;
 
 namespace Speckle.InterfaceGenerator.Tests;
