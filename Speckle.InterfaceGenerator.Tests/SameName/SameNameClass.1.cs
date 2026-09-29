@@ -1,7 +1,6 @@
 // ReSharper disable CheckNamespace
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.SymbolStore;
 using Speckle.InterfaceGenerator;
 
@@ -18,12 +17,7 @@ public class SameNameClass : ISameNameClass { }
 public class SameNameClass2 : ISameNameClass2
 {
     public ISameNameClass Return() => throw new InvalidOperationException();
-
     public SymbolToken Return2() => throw new InvalidOperationException();
+    public T GetRequiredService<T>() where T : class  =>  throw new InvalidOperationException();
 
-    public T GetRequiredService<T>()
-        where T : class => throw new InvalidOperationException();
-
-    public void TestGenericParameter(List<SameNameClass> x) =>
-        throw new InvalidOperationException();
 }

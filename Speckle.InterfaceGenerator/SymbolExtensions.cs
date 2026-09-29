@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -8,13 +7,13 @@ namespace Speckle.InterfaceGenerator;
 
 internal static class SymbolExtensions
 {
+    private static readonly HashSet<string> _defaults = new() { "System", "Microsoft" };
     public static string GetNamespaceAndType(this ITypeSymbol typeSymbol)
     {
         if (typeSymbol is ITypeParameterSymbol t)
         {
-            return t.ToString();
+            return t.Name;
         }
-
         if (typeSymbol.SpecialType != SpecialType.None)
         {
             return typeSymbol.ToString();
@@ -24,10 +23,30 @@ internal static class SymbolExtensions
         {
             return typeSymbol.ToString();
         }
+        var namespacez = new List<string>();
+        var ns = typeSymbol.ContainingNamespace;
+        while (ns is not null && !ns.IsGlobalNamespace)
+        {
+            namespacez.Insert(0, ns.Name);
+            ns = ns.ContainingNamespace;
+        }
 
-        return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        if (namespacez.Any())
+        {
+            if (!_defaults.Contains(namespacez.First()))
+            {
+                var candidate = string.Join(".", namespacez);
+                var name = typeSymbol.ToString();
+                if (!name.StartsWith(candidate))
+                {
+                    name += candidate + "." + name;
+                }
+                return "global::" + name;
+            }
+        }
+
+        return typeSymbol.ToString();
     }
-
     public static bool TryGetAttribute(
         this ISymbol symbol,
         INamedTypeSymbol attributeType,

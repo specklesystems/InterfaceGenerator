@@ -230,11 +230,15 @@ public class AutoInterfaceGenerator : ISourceGenerator
                 continue;
             }
 
-            GenerateInterfaceMemberDefinition(writer, member);
+            GenerateInterfaceMemberDefinition(writer, implTypeSymbol, member);
         }
     }
 
-    private static void GenerateInterfaceMemberDefinition(TextWriter writer, ISymbol member)
+    private static void GenerateInterfaceMemberDefinition(
+        TextWriter writer,
+        INamedTypeSymbol owner,
+        ISymbol member
+    )
     {
         switch (member)
         {
@@ -242,7 +246,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
                 GeneratePropertyDefinition(writer, propertySymbol);
                 break;
             case IMethodSymbol methodSymbol:
-                GenerateMethodDefinition(writer, methodSymbol);
+                GenerateMethodDefinition(writer, owner, methodSymbol);
                 break;
         }
     }
@@ -309,7 +313,11 @@ public class AutoInterfaceGenerator : ISourceGenerator
         if (propertySymbol.IsIndexer)
         {
             writer.Write("{0} this[", propertySymbol.Type.GetNamespaceAndType());
-            writer.WriteJoin(", ", propertySymbol.Parameters, WriteMethodParam);
+            writer.WriteJoin(
+                ", ",
+                propertySymbol.Parameters,
+                (x, p) => WriteMethodParam(x, p, false)
+            );
             writer.Write("] ");
         }
         else
@@ -339,7 +347,11 @@ public class AutoInterfaceGenerator : ISourceGenerator
         writer.WriteLine("}");
     }
 
-    private static void GenerateMethodDefinition(TextWriter writer, IMethodSymbol methodSymbol)
+    private static void GenerateMethodDefinition(
+        TextWriter writer,
+        INamedTypeSymbol owner,
+        IMethodSymbol methodSymbol
+    )
     {
         if (methodSymbol.MethodKind != MethodKind.Ordinary || methodSymbol.IsStatic)
         {
@@ -360,15 +372,22 @@ public class AutoInterfaceGenerator : ISourceGenerator
         if (methodSymbol.IsGenericMethod)
         {
             writer.Write("<");
-            writer.WriteJoin(
-                ", ",
-                methodSymbol.TypeParameters.Select(x => x.GetNamespaceAndType())
-            );
+            writer.WriteJoin(", ", methodSymbol.TypeParameters.Select(x => x.Name));
             writer.Write(">");
         }
 
         writer.Write("(");
-        writer.WriteJoin(", ", methodSymbol.Parameters, WriteMethodParam);
+        writer.WriteJoin(
+            ", ",
+            methodSymbol.Parameters,
+            (x, p) =>
+                WriteMethodParam(
+                    x,
+                    p,
+                    owner.TypeParameters.Any(t => t.Name == p.Type.Name)
+                        || methodSymbol.TypeParameters.Any(t => t.Name == p.Type.Name)
+                )
+        );
 
         writer.Write(")");
 
@@ -380,7 +399,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         writer.WriteLine(";");
     }
 
-    private static void WriteMethodParam(TextWriter writer, IParameterSymbol param)
+    private static void WriteMethodParam(TextWriter writer, IParameterSymbol param, bool isGeneric)
     {
         if (param.IsParams)
         {
@@ -400,7 +419,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
                 break;
         }
 
-        writer.Write(param.Type.GetNamespaceAndType());
+        writer.Write(isGeneric ? param.Type : param.Type.GetNamespaceAndType());
         writer.Write(" ");
 
         if (StringExtensions.IsCSharpKeyword(param.Name))
