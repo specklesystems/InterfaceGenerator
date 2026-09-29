@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using AwesomeAssertions;
@@ -259,6 +260,37 @@ public class GeneratorDriverTests
         generated.Should().Contain("""string text = "say \"hi\"" """.TrimEnd());
         generated.Should().Contain("""string path = "C:\\temp" """.TrimEnd());
         generated.Should().Contain("""char c = '\''""");
+    }
+
+    [Fact]
+    public void NumericDefaultValues_AreCultureInvariant()
+    {
+        const string source = """
+            namespace Sample
+            {
+                [Speckle.InterfaceGenerator.GenerateAutoInterface]
+                public class Service : IService
+                {
+                    public void Scale(double factor = 1.5, float ratio = 0.25f, decimal price = 9.99m) { }
+                }
+            }
+            """;
+
+        var previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+        try
+        {
+            var (problems, generated) = RunGenerator(source);
+
+            problems.Should().BeEmpty();
+            generated
+                .Should()
+                .Contain("double factor = 1.5d, float ratio = 0.25f, decimal price = 9.99m");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
     }
 
     private static string[] GetProblems(string source) => RunGenerator(source).Problems;

@@ -5,7 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -57,15 +56,8 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
     private void ExecuteCore(GeneratorExecutionContext context)
     {
-        // setting the culture to invariant prevents errors such as emitting a decimal comma (0,1) instead of
-        // a decimal point (0.1) in certain cultures
-        var prevCulture = Thread.CurrentThread.CurrentCulture;
-        Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
         GenerateAttributes(context);
         GenerateInterfaces(context);
-
-        Thread.CurrentThread.CurrentCulture = prevCulture;
     }
 
     private static void GenerateAttributes(GeneratorExecutionContext context)
@@ -158,9 +150,8 @@ public class AutoInterfaceGenerator : ISourceGenerator
         AttributeData attributeData
     )
     {
-        using var stream = new MemoryStream();
-        var streamWriter = new StreamWriter(stream, Encoding.UTF8);
-        var codeWriter = new IndentedTextWriter(streamWriter, "    ");
+        using var stringWriter = new StringWriter(CultureInfo.InvariantCulture);
+        using var codeWriter = new IndentedTextWriter(stringWriter, "    ");
 
         var namespaceName = implTypeSymbol.ContainingNamespace.ToDisplayString();
         var interfaceName = InferInterfaceName(implTypeSymbol, attributeData);
@@ -191,9 +182,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         codeWriter.WriteLine("#nullable restore");
 
         codeWriter.Flush();
-        stream.Seek(0, SeekOrigin.Begin);
-        using var reader = new StreamReader(stream, Encoding.UTF8, true);
-        return reader.ReadToEnd();
+        return stringWriter.ToString();
     }
 
     private static void WriteTypeGenericsIfNeeded(
