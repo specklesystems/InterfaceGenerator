@@ -131,6 +131,24 @@ public class GeneratorDriverTests
     }
 
     [Fact]
+    public void GenericMethodConstraintAfterUnconstrainedParameter_GeneratesMatchingInterface()
+    {
+        const string SOURCE = """
+            namespace Sample
+            {
+                [Speckle.InterfaceGenerator.GenerateAutoInterface]
+                public class Service : IService
+                {
+                    public void Register<TKey, TValue>()
+                        where TValue : class { }
+                }
+            }
+            """;
+
+        GetProblems(SOURCE).Should().BeEmpty();
+    }
+
+    [Fact]
     public void NestedNullableTypes_GenerateMatchingInterface()
     {
         const string SOURCE = """

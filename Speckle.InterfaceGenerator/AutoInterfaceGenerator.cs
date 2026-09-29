@@ -468,7 +468,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
             var constraints = typeParameter.EnumGenericConstraints().ToList();
             if (constraints.Count == 0)
             {
-                break;
+                continue;
             }
 
             writer.Write(" where {0} : ", typeParameter.Name);

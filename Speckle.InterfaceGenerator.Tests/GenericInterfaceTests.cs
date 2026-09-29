@@ -30,6 +30,17 @@ public class GenericInterfaceTests
 
         genericArgs[1].IsValueType.Should().BeTrue();
     }
+
+    [Fact]
+    public void ConstraintAfterUnconstrainedParameter_GeneratedCorrectly()
+    {
+        var genericArgs = typeof(IConstraintAfterUnconstrainedService<,>).GetGenericArguments();
+
+        genericArgs[0].GenericParameterAttributes.Should().Be(GenericParameterAttributes.None);
+        genericArgs[1]
+            .GenericParameterAttributes.Should()
+            .HaveFlag(GenericParameterAttributes.ReferenceTypeConstraint);
+    }
 }
 
 [GenerateAutoInterface]
@@ -37,3 +48,8 @@ public class GenericInterfaceTests
 internal class GenericInterfaceTestsService<TX, TY> : IGenericInterfaceTestsService<TX, TY>
     where TX : class, IEquatable<TX>, new()
     where TY : struct { }
+
+[GenerateAutoInterface]
+internal class ConstraintAfterUnconstrainedService<TA, TB>
+    : IConstraintAfterUnconstrainedService<TA, TB>
+    where TB : class { }
