@@ -1,4 +1,4 @@
-﻿namespace Speckle.InterfaceGenerator;
+namespace Speckle.InterfaceGenerator;
 
 internal class Attributes
 {
