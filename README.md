@@ -37,6 +37,12 @@ Supports:
  - Explicit interface names (using the `Name` property on `GenerateAutoInterface`).
  - Explicit interface visibility (using the `VisibilityModifier` property on `GenerateAutoInterface`).
  - Explicitly excluding a member from the interface (using `[AutoInterfaceIgnore]`).
+ - Copying selected attributes from the class, methods, return values, parameters and properties onto the interface:
+   - `[Obsolete]`, `[Experimental]`, `[EditorBrowsable]`, `[Pure]`
+   - Nullability flow attributes: `[AllowNull]`, `[DisallowNull]`, `[MaybeNull]`, `[MaybeNullWhen]`, `[NotNull]`, `[NotNullWhen]`, `[NotNullIfNotNull]`, `[DoesNotReturn]`, `[DoesNotReturnIf]`
+   - Caller info attributes: `[CallerMemberName]`, `[CallerFilePath]`, `[CallerLineNumber]`, `[CallerArgumentExpression]`
+
+   Other attributes are not copied. Don't also apply one of these attributes to a hand-written part of the same `partial interface`, or it will be duplicated (CS0579).
  
 Missing:
  - Events.

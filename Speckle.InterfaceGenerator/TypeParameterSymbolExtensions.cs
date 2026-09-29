@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
 namespace Speckle.InterfaceGenerator;
@@ -34,7 +34,7 @@ internal static class TypeParameterSymbolExtensions
         // types go in the middle
         foreach (var constraintType in symbol.ConstraintTypes)
         {
-            yield return constraintType.ToDisplayString();
+            yield return constraintType.ToTypeReference();
         }
 
         // the new() constraint has to be the last

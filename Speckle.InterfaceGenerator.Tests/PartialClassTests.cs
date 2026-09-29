@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using Speckle.InterfaceGenerator.Tests.Partial;
 using Xunit;
 

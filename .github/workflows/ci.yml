@@ -2,25 +2,39 @@ name: "Check Build"
 
 on:
   pull_request:
-    
-jobs: 
-  deploy:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
     runs-on: ubuntu-latest
-      
+
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v4
-        
+        uses: actions/checkout@v7
+
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 8.0.x
-          
+          global-json-file: global.json
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Check formatting
+        run: dotnet csharpier check .
+
       - name: Restore dependencies
-        run: dotnet restore
-        
+        run: dotnet restore -warnaserror
+
       - name: Build
-        run: dotnet build --configuration Debug --no-restore 
-        
+        run: dotnet build --configuration Release --no-restore -warnaserror
+
       - name: Test
-        run: dotnet test --no-build --configuration Debug --verbosity normal
+        run: dotnet test --configuration Release --no-build
+
+      - name: Pack
+        run: dotnet pack Speckle.InterfaceGenerator/Speckle.InterfaceGenerator.csproj --configuration Release --no-build --output artifacts

@@ -1,7 +1,6 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -42,7 +41,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
     )
     {
         var descriptor = new DiagnosticDescriptor(
-            "Speckle.InterfaceGenerator.CriticalError",
+            "SIG0001",
             "Exception thrown in InterfaceGenerator",
             $"{exception.GetType().FullName} {exception.Message} {exception.StackTrace.Trim()}",
             "Speckle.InterfaceGenerator",
@@ -72,8 +71,8 @@ public class AutoInterfaceGenerator : ISourceGenerator
     private static void GenerateAttributes(GeneratorExecutionContext context)
     {
         context.AddSource(
-            $"{Attributes.GenerateAutoInterfaceClassname}.g.cs",
-            SourceText.From(Attributes.AttributesSourceCode, Encoding.UTF8)
+            $"{Attributes.GENERATE_AUTO_INTERFACE_CLASSNAME}.g.cs",
+            SourceText.From(Attributes.ATTRIBUTES_SOURCE_CODE, Encoding.UTF8)
         );
     }
 
@@ -135,7 +134,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         AttributeData attributeData
     )
     {
-        string? result = attributeData.GetNamedParamValue(Attributes.VisibilityModifierPropName);
+        var result = attributeData.GetNamedParamValue(Attributes.VISIBILITY_MODIFIER_PROP_NAME);
         if (!string.IsNullOrEmpty(result))
         {
             return result ?? throw new NullReferenceException("result is null");
@@ -150,7 +149,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
     private static string InferInterfaceName(ISymbol implTypeSymbol, AttributeData attributeData)
     {
-        return attributeData.GetNamedParamValue(Attributes.InterfaceNamePropName)
+        return attributeData.GetNamedParamValue(Attributes.INTERFACE_NAME_PROP_NAME)
             ?? $"I{implTypeSymbol.Name}";
     }
 
@@ -175,6 +174,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
         ++codeWriter.Indent;
         WriteSymbolDocsIfPresent(codeWriter, implTypeSymbol);
+        codeWriter.WriteAttributes(implTypeSymbol.GetAttributes(), AttributeTargets.Interface);
         codeWriter.Write("{0} partial interface {1}", visibilityModifier, interfaceName);
         WriteTypeGenericsIfNeeded(codeWriter, implTypeSymbol);
         codeWriter.WriteLine();
@@ -271,7 +271,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
             lines.Add(line);
         }
 
-        for (int i = 1; i < lines.Count - 1; i++)
+        for (var i = 1; i < lines.Count - 1; i++)
         {
             var line = lines[i].TrimStart(); // for some reason, 4 spaces are inserted to the beginning of the line
             writer.WriteLine("/// {0}", line);
@@ -293,10 +293,10 @@ public class AutoInterfaceGenerator : ISourceGenerator
             return;
         }
 
-        bool hasPublicGetter =
+        var hasPublicGetter =
             propertySymbol.GetMethod is not null && IsPublicOrInternal(propertySymbol.GetMethod);
 
-        bool hasPublicSetter =
+        var hasPublicSetter =
             propertySymbol.SetMethod is not null && IsPublicOrInternal(propertySymbol.SetMethod);
 
         if (!hasPublicGetter && !hasPublicSetter)
@@ -305,16 +305,17 @@ public class AutoInterfaceGenerator : ISourceGenerator
         }
 
         WriteSymbolDocsIfPresent(writer, propertySymbol);
+        writer.WriteAttributes(propertySymbol.GetAttributes(), AttributeTargets.Property);
 
         if (propertySymbol.IsIndexer)
         {
-            writer.Write("{0} this[", propertySymbol.Type.GetNamespaceAndType());
+            writer.Write("{0} this[", propertySymbol.Type.ToTypeReference());
             writer.WriteJoin(", ", propertySymbol.Parameters, WriteMethodParam);
             writer.Write("] ");
         }
         else
         {
-            writer.Write("{0} {1} ", propertySymbol.Type, propertySymbol.Name); // ex. int Foo
+            writer.Write("{0} {1} ", propertySymbol.Type.ToTypeReference(), propertySymbol.Name);
         }
 
         writer.Write("{ ");
@@ -354,16 +355,18 @@ public class AutoInterfaceGenerator : ISourceGenerator
         }
 
         WriteSymbolDocsIfPresent(writer, methodSymbol);
+        writer.WriteAttributes(methodSymbol.GetAttributes(), AttributeTargets.Method);
+        writer.WriteAttributes(
+            methodSymbol.GetReturnTypeAttributes(),
+            AttributeTargets.ReturnValue
+        );
 
-        writer.Write("{0} {1}", methodSymbol.ReturnType.GetNamespaceAndType(), methodSymbol.Name); // ex. int Foo
+        writer.Write("{0} {1}", methodSymbol.ReturnType.ToTypeReference(), methodSymbol.Name);
 
         if (methodSymbol.IsGenericMethod)
         {
             writer.Write("<");
-            writer.WriteJoin(
-                ", ",
-                methodSymbol.TypeParameters.Select(x => x.GetNamespaceAndType())
-            );
+            writer.WriteJoin(", ", methodSymbol.TypeParameters.Select(x => x.Name));
             writer.Write(">");
         }
 
@@ -382,6 +385,8 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
     private static void WriteMethodParam(TextWriter writer, IParameterSymbol param)
     {
+        writer.WriteAttributes(param.GetAttributes(), AttributeTargets.Parameter);
+
         if (param.IsParams)
         {
             writer.Write("params ");
@@ -400,7 +405,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
                 break;
         }
 
-        writer.Write(param.Type.GetNamespaceAndType());
+        writer.Write(param.Type.ToTypeReference());
         writer.Write(" ");
 
         if (StringExtensions.IsCSharpKeyword(param.Name))
@@ -461,7 +466,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
             var constraints = typeParameter.EnumGenericConstraints().ToList();
             if (constraints.Count == 0)
             {
-                break;
+                continue;
             }
 
             writer.Write(" where {0} : ", typeParameter.Name);
@@ -472,11 +477,11 @@ public class AutoInterfaceGenerator : ISourceGenerator
     private void InitAttributes(Compilation compilation)
     {
         _generateAutoInterfaceAttribute = compilation.GetTypeByMetadataName(
-            $"{Attributes.AttributesNamespace}.{Attributes.GenerateAutoInterfaceClassname}"
+            $"{Attributes.ATTRIBUTES_NAMESPACE}.{Attributes.GENERATE_AUTO_INTERFACE_CLASSNAME}"
         );
 
         _ignoreAttribute = compilation.GetTypeByMetadataName(
-            $"{Attributes.AttributesNamespace}.{Attributes.AutoInterfaceIgnoreAttributeClassname}"
+            $"{Attributes.ATTRIBUTES_NAMESPACE}.{Attributes.AUTO_INTERFACE_IGNORE_ATTRIBUTE_CLASSNAME}"
         );
     }
 
@@ -504,7 +509,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
         var compilation = context.Compilation.AddSyntaxTrees(
             CSharpSyntaxTree.ParseText(
-                SourceText.From(Attributes.AttributesSourceCode, Encoding.UTF8),
+                SourceText.From(Attributes.ATTRIBUTES_SOURCE_CODE, Encoding.UTF8),
                 options
             )
         );

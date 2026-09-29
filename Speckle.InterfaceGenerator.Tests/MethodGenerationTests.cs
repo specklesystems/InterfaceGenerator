@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using FluentAssertions;
+using System.Threading.Tasks;
+using AwesomeAssertions;
 using Xunit;
 
 namespace Speckle.InterfaceGenerator.Tests;
@@ -31,6 +33,40 @@ public class MethodGenerationTests
         parameters.Should().BeEmpty();
 
         _sut.VoidMethod();
+    }
+
+    [Fact]
+    public void NestedNullableAnnotations_ArePreserved()
+    {
+        var context = new NullabilityInfoContext();
+
+        var returnInfo = context.Create(
+            typeof(IMethodsTestService)
+                .GetMethod(nameof(MethodsTestService.NestedNullableReturn))!
+                .ReturnParameter
+        );
+        returnInfo.GenericTypeArguments.Single().ReadState.Should().Be(NullabilityState.Nullable);
+
+        var paramInfo = context.Create(
+            typeof(IMethodsTestService)
+                .GetMethod(nameof(MethodsTestService.NestedNullableParam))!
+                .GetParameters()
+                .Single()
+        );
+        paramInfo.GenericTypeArguments.Single().ReadState.Should().Be(NullabilityState.Nullable);
+    }
+
+    [Fact]
+    public void VoidMethodWithContextualKeywordParam_IsImplemented()
+    {
+        var method =
+            typeof(IMethodsTestService).GetMethod(
+                nameof(MethodsTestService.VoidMethodWithContextualKeywordParam)
+            ) ?? throw new InvalidOperationException();
+
+        method.GetParameters().Single().Name.Should().Be("field");
+
+        _sut.VoidMethodWithContextualKeywordParam("");
     }
 
     [Fact]
@@ -269,7 +305,7 @@ public class MethodGenerationTests
         parameters.Select(x => x.IsOptional).Should().AllBeEquivalentTo(true);
 
         parameters[0].DefaultValue.Should().Be("cGFyYW0=");
-        parameters[1].DefaultValue.Should().Be(MethodsTestService.StringConstant);
+        parameters[1].DefaultValue.Should().Be(MethodsTestService.STRING_CONSTANT);
         parameters[2].DefaultValue.Should().Be(0.1f);
         parameters[3].DefaultValue.Should().Be(0.2d);
         parameters[4].DefaultValue.Should().Be(0.3d);
@@ -321,13 +357,19 @@ public class MethodGenerationTests
 [GenerateAutoInterface]
 internal class MethodsTestService : IMethodsTestService
 {
-    public const string StringConstant = "Const";
+    public const string STRING_CONSTANT = "Const";
 
     public void VoidMethod() { }
 
     public void VoidMethodWithParams(string a, string b) { }
 
     public void VoidMethodWithKeywordParam(string @void) { }
+
+    public void VoidMethodWithContextualKeywordParam(string field) { }
+
+    public Task<string?> NestedNullableReturn() => Task.FromResult<string?>(null);
+
+    public void NestedNullableParam(List<string?> values) { }
 
     public void VoidMethodWithOutParam(out string a)
     {
@@ -358,7 +400,7 @@ internal class MethodsTestService : IMethodsTestService
 
     public void VoidMethodWithOptionalParams(
         string stringLiteral = "cGFyYW0=",
-        string stringConstant = StringConstant,
+        string stringConstant = STRING_CONSTANT,
         float floatLiteral = 0.1f,
         double doubleLiteral = 0.2,
         decimal decimalLiteral = 0.3m,

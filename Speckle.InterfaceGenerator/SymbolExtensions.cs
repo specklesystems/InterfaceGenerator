@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,25 +7,13 @@ namespace Speckle.InterfaceGenerator;
 
 internal static class SymbolExtensions
 {
-    public static string GetNamespaceAndType(this ITypeSymbol typeSymbol)
-    {
-        if (typeSymbol is ITypeParameterSymbol t)
-        {
-            return t.ToString();
-        }
+    private static readonly SymbolDisplayFormat TYPE_FORMAT =
+        SymbolDisplayFormat.FullyQualifiedFormat.AddMiscellaneousOptions(
+            SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
+        );
 
-        if (typeSymbol.SpecialType != SpecialType.None)
-        {
-            return typeSymbol.ToString();
-        }
-
-        if (typeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
-        {
-            return typeSymbol.ToString();
-        }
-
-        return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-    }
+    public static string ToTypeReference(this ITypeSymbol typeSymbol) =>
+        typeSymbol.ToDisplayString(TYPE_FORMAT);
 
     public static bool TryGetAttribute(
         this ISymbol symbol,
@@ -71,12 +58,7 @@ internal static class SymbolExtensions
                 stringBuilder.Insert(0, '.');
             }
 
-            stringBuilder.Insert(
-                0,
-                symbol.OriginalDefinition.ToDisplayString(
-                    SymbolDisplayFormat.MinimallyQualifiedFormat
-                )
-            );
+            stringBuilder.Insert(0, symbol.MetadataName);
             symbol = symbol.ContainingSymbol;
         }
 
