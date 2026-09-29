@@ -6,119 +6,78 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Speckle.InterfaceGenerator;
 
 [Generator]
-public class AutoInterfaceGenerator : ISourceGenerator
+public class AutoInterfaceGenerator : IIncrementalGenerator
 {
-    private INamedTypeSymbol? _generateAutoInterfaceAttribute;
-    private INamedTypeSymbol? _ignoreAttribute;
+    private const string GENERATE_AUTO_INTERFACE_METADATA_NAME =
+        $"{Attributes.ATTRIBUTES_NAMESPACE}.{Attributes.GENERATE_AUTO_INTERFACE_CLASSNAME}";
 
-    public void Initialize(GeneratorInitializationContext context)
+    private const string AUTO_INTERFACE_IGNORE_METADATA_NAME =
+        $"{Attributes.ATTRIBUTES_NAMESPACE}.{Attributes.AUTO_INTERFACE_IGNORE_ATTRIBUTE_CLASSNAME}";
+
+    private static readonly DiagnosticDescriptor EXCEPTION_DESCRIPTOR = new(
+        "SIG0001",
+        "Exception thrown in InterfaceGenerator",
+        "{0}",
+        "Speckle.InterfaceGenerator",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        customTags: WellKnownDiagnosticTags.AnalyzerException
+    );
+
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
+        context.RegisterPostInitializationOutput(static ctx =>
+            ctx.AddSource(
+                $"{Attributes.GENERATE_AUTO_INTERFACE_CLASSNAME}.g.cs",
+                SourceText.From(Attributes.ATTRIBUTES_SOURCE_CODE, Encoding.UTF8)
+            )
+        );
+
+        var interfaces = context
+            .SyntaxProvider.ForAttributeWithMetadataName(
+                GENERATE_AUTO_INTERFACE_METADATA_NAME,
+                static (node, _) => node is ClassDeclarationSyntax or RecordDeclarationSyntax,
+                static (ctx, _) => RenderInterface(ctx)
+            )
+            .WithTrackingName("RenderInterface");
+
+        context.RegisterSourceOutput(interfaces, static (ctx, source) => AddInterface(ctx, source));
     }
 
-    public void Execute(GeneratorExecutionContext context)
+    private static InterfaceSource RenderInterface(GeneratorAttributeSyntaxContext context)
     {
+        var implTypeSymbol = (INamedTypeSymbol)context.TargetSymbol;
+        var hintName =
+            $"{implTypeSymbol.GetFullMetadataName(useNameWhenNotFound: true)}_AutoInterface.g.cs";
+
         try
         {
-            ExecuteCore(context);
+            var source = GenerateInterfaceCode(implTypeSymbol, context.Attributes.Single());
+            return new InterfaceSource(hintName, source, null);
         }
         catch (Exception exception)
         {
-            RaiseExceptionDiagnostic(context, exception);
+            var error =
+                $"{exception.GetType().FullName} {exception.Message} {exception.StackTrace?.Trim()}";
+            return new InterfaceSource(hintName, null, error);
         }
     }
 
-    private static void RaiseExceptionDiagnostic(
-        GeneratorExecutionContext context,
-        Exception exception
-    )
+    private static void AddInterface(SourceProductionContext context, InterfaceSource source)
     {
-        var descriptor = new DiagnosticDescriptor(
-            "SIG0001",
-            "Exception thrown in InterfaceGenerator",
-            $"{exception.GetType().FullName} {exception.Message} {exception.StackTrace.Trim()}",
-            "Speckle.InterfaceGenerator",
-            DiagnosticSeverity.Error,
-            true,
-            customTags: WellKnownDiagnosticTags.AnalyzerException
-        );
-
-        var diagnostic = Diagnostic.Create(descriptor, null);
-
-        context.ReportDiagnostic(diagnostic);
-    }
-
-    private void ExecuteCore(GeneratorExecutionContext context)
-    {
-        GenerateAttributes(context);
-        GenerateInterfaces(context);
-    }
-
-    private static void GenerateAttributes(GeneratorExecutionContext context)
-    {
-        context.AddSource(
-            $"{Attributes.GENERATE_AUTO_INTERFACE_CLASSNAME}.g.cs",
-            SourceText.From(Attributes.ATTRIBUTES_SOURCE_CODE, Encoding.UTF8)
-        );
-    }
-
-    private void GenerateInterfaces(GeneratorExecutionContext context)
-    {
-        if (context.SyntaxReceiver is not SyntaxReceiver receiver)
+        if (source.Source is null)
         {
+            context.ReportDiagnostic(Diagnostic.Create(EXCEPTION_DESCRIPTOR, null, source.Error));
             return;
         }
 
-        var compilation = GetCompilation(context);
-        InitAttributes(compilation);
-
-        var classSymbols = GetImplTypeSymbols(compilation, receiver);
-
-        List<string> classSymbolNames = [];
-
-        foreach (var implTypeSymbol in classSymbols)
-        {
-            if (
-                !implTypeSymbol.TryGetAttribute(
-                    _generateAutoInterfaceAttribute
-                        ?? throw new NullReferenceException(
-                            "_generateAutoInterfaceAttribute is null"
-                        ),
-                    out var attributes
-                )
-            )
-            {
-                continue;
-            }
-
-            if (
-                classSymbolNames.Contains(
-                    implTypeSymbol.GetFullMetadataName(useNameWhenNotFound: true)
-                )
-            )
-            {
-                continue; // partial class, already added
-            }
-
-            classSymbolNames.Add(implTypeSymbol.GetFullMetadataName(useNameWhenNotFound: true));
-
-            var attribute = attributes.Single();
-            var source = SourceText.From(
-                GenerateInterfaceCode(implTypeSymbol, attribute),
-                Encoding.UTF8
-            );
-
-            context.AddSource(
-                $"{implTypeSymbol.GetFullMetadataName(useNameWhenNotFound: true)}_AutoInterface.g.cs",
-                source
-            );
-        }
+        context.AddSource(source.HintName, SourceText.From(source.Source, Encoding.UTF8));
     }
 
     private static string InferVisibilityModifier(
@@ -145,7 +104,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
             ?? $"I{implTypeSymbol.Name}";
     }
 
-    private string GenerateInterfaceCode(
+    private static string GenerateInterfaceCode(
         INamedTypeSymbol implTypeSymbol,
         AttributeData attributeData
     )
@@ -202,7 +161,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         WriteTypeParameterConstraints(writer, implTypeSymbol.TypeParameters);
     }
 
-    private void GenerateInterfaceMemberDefinitions(
+    private static void GenerateInterfaceMemberDefinitions(
         TextWriter writer,
         INamedTypeSymbol implTypeSymbol
     )
@@ -211,9 +170,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         {
             if (
                 member.DeclaredAccessibility != Accessibility.Public
-                || member.HasAttribute(
-                    _ignoreAttribute ?? throw new NullReferenceException("_ignoreAttribute is null")
-                )
+                || member.HasAttribute(AUTO_INTERFACE_IGNORE_METADATA_NAME)
             )
             {
                 continue;
@@ -462,48 +419,5 @@ public class AutoInterfaceGenerator : ISourceGenerator
             writer.Write(" where {0} : ", typeParameter.Name);
             writer.WriteJoin(", ", constraints);
         }
-    }
-
-    private void InitAttributes(Compilation compilation)
-    {
-        _generateAutoInterfaceAttribute = compilation.GetTypeByMetadataName(
-            $"{Attributes.ATTRIBUTES_NAMESPACE}.{Attributes.GENERATE_AUTO_INTERFACE_CLASSNAME}"
-        );
-
-        _ignoreAttribute = compilation.GetTypeByMetadataName(
-            $"{Attributes.ATTRIBUTES_NAMESPACE}.{Attributes.AUTO_INTERFACE_IGNORE_ATTRIBUTE_CLASSNAME}"
-        );
-    }
-
-    private static IEnumerable<INamedTypeSymbol> GetImplTypeSymbols(
-        Compilation compilation,
-        SyntaxReceiver receiver
-    )
-    {
-        return receiver
-            .CandidateTypes.Select(candidate => GetTypeSymbol(compilation, candidate))
-            .Where(x => x != null)
-            .Cast<INamedTypeSymbol>();
-    }
-
-    private static INamedTypeSymbol? GetTypeSymbol(Compilation compilation, SyntaxNode type)
-    {
-        var model = compilation.GetSemanticModel(type.SyntaxTree);
-        var typeSymbol = model.GetDeclaredSymbol(type);
-        return typeSymbol as INamedTypeSymbol;
-    }
-
-    private static Compilation GetCompilation(GeneratorExecutionContext context)
-    {
-        var options = context.Compilation.SyntaxTrees.First().Options as CSharpParseOptions;
-
-        var compilation = context.Compilation.AddSyntaxTrees(
-            CSharpSyntaxTree.ParseText(
-                SourceText.From(Attributes.ATTRIBUTES_SOURCE_CODE, Encoding.UTF8),
-                options
-            )
-        );
-
-        return compilation;
     }
 }

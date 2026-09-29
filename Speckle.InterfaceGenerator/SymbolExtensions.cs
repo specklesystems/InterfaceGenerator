@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -15,24 +14,10 @@ internal static class SymbolExtensions
     public static string ToTypeReference(this ITypeSymbol typeSymbol) =>
         typeSymbol.ToDisplayString(TYPE_FORMAT);
 
-    public static bool TryGetAttribute(
-        this ISymbol symbol,
-        INamedTypeSymbol attributeType,
-        out IEnumerable<AttributeData> attributes
-    )
-    {
-        attributes = symbol
+    public static bool HasAttribute(this ISymbol symbol, string attributeMetadataName) =>
+        symbol
             .GetAttributes()
-            .Where(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attributeType));
-        return attributes.Any();
-    }
-
-    public static bool HasAttribute(this ISymbol symbol, INamedTypeSymbol attributeType)
-    {
-        return symbol
-            .GetAttributes()
-            .Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attributeType));
-    }
+            .Any(x => x.AttributeClass?.ToDisplayString() == attributeMetadataName);
 
     //Ref: https://stackoverflow.com/questions/27105909/get-fully-qualified-metadata-name-in-roslyn
     public static string GetFullMetadataName(this ISymbol symbol, bool useNameWhenNotFound = false)
