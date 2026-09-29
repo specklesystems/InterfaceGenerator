@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/Config/">
+    <File Path=".editorconfig" />
+    <File Path=".github/workflows/nuget.yml" />
+    <File Path=".gitignore" />
+    <File Path="global.json" />
+  </Folder>
+  <Project Path="Speckle.InterfaceGenerator.Tests/Speckle.InterfaceGenerator.Tests.csproj" />
+  <Project Path="Speckle.InterfaceGenerator/Speckle.InterfaceGenerator.csproj" />
+</Solution>
