@@ -293,23 +293,114 @@ public class GeneratorDriverTests
         }
     }
 
-    private static string[] GetProblems(string source) => RunGenerator(source).Problems;
+    private const string CACHED_SERVICE_SOURCE = """
+        namespace Sample
+        {
+            [Speckle.InterfaceGenerator.GenerateAutoInterface]
+            public class Service : IService
+            {
+                public int Get() => 0;
+            }
+        }
+        """;
 
-    private static (string[] Problems, string Generated) RunGenerator(string source)
+    private const string CACHED_OTHER_SOURCE = """
+        namespace Sample
+        {
+            public class Other
+            {
+                public int Value() => 1;
+            }
+        }
+        """;
+
+    [Fact]
+    public void UnrelatedEdit_ReusesCachedInterfaces()
+    {
+        var service = CSharpSyntaxTree.ParseText(CACHED_SERVICE_SOURCE, PARSE_OPTIONS);
+        var other = CSharpSyntaxTree.ParseText(CACHED_OTHER_SOURCE, PARSE_OPTIONS);
+        var compilation = CreateCompilation(service, other);
+        var driver = CreateTrackingDriver().RunGenerators(compilation);
+
+        var edited = compilation.ReplaceSyntaxTree(
+            other,
+            CSharpSyntaxTree.ParseText(CACHED_OTHER_SOURCE.Replace("=> 1", "=> 2"), PARSE_OPTIONS)
+        );
+        var result = driver.RunGenerators(edited).GetRunResult().Results.Single();
+
+        result
+            .TrackedSteps["RenderInterface"]
+            .SelectMany(x => x.Outputs)
+            .Select(x => x.Reason)
+            .Should()
+            .OnlyContain(x =>
+                x == IncrementalStepRunReason.Cached || x == IncrementalStepRunReason.Unchanged
+            );
+        result
+            .TrackedOutputSteps.SelectMany(x => x.Value)
+            .SelectMany(x => x.Outputs)
+            .Select(x => x.Reason)
+            .Should()
+            .OnlyContain(x => x == IncrementalStepRunReason.Cached);
+    }
+
+    [Fact]
+    public void AttributedClassEdit_RegeneratesInterface()
+    {
+        var service = CSharpSyntaxTree.ParseText(CACHED_SERVICE_SOURCE, PARSE_OPTIONS);
+        var compilation = CreateCompilation(service);
+        var driver = CreateTrackingDriver().RunGenerators(compilation);
+
+        var edited = compilation.ReplaceSyntaxTree(
+            service,
+            CSharpSyntaxTree.ParseText(
+                CACHED_SERVICE_SOURCE.Replace("public int Get()", "public long Get()"),
+                PARSE_OPTIONS
+            )
+        );
+        var result = driver.RunGenerators(edited).GetRunResult().Results.Single();
+
+        result
+            .TrackedSteps["RenderInterface"]
+            .SelectMany(x => x.Outputs)
+            .Select(x => x.Reason)
+            .Should()
+            .Equal(IncrementalStepRunReason.Modified);
+    }
+
+    private static readonly CSharpParseOptions PARSE_OPTIONS = new(LanguageVersion.Latest);
+
+    private static GeneratorDriver CreateTrackingDriver() =>
+        CSharpGeneratorDriver.Create(
+            [new AutoInterfaceGenerator().AsSourceGenerator()],
+            driverOptions: new GeneratorDriverOptions(
+                IncrementalGeneratorOutputKind.None,
+                trackIncrementalGeneratorSteps: true
+            )
+        );
+
+    private static CSharpCompilation CreateCompilation(params SyntaxTree[] syntaxTrees)
     {
         var references = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
             .Split(Path.PathSeparator)
             .Select(x => MetadataReference.CreateFromFile(x));
 
-        var compilation = CSharpCompilation.Create(
+        return CSharpCompilation.Create(
             nameof(GeneratorDriverTests),
-            [CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest))],
+            syntaxTrees,
             references,
             new CSharpCompilationOptions(
                 OutputKind.DynamicallyLinkedLibrary,
                 nullableContextOptions: NullableContextOptions.Enable
             )
         );
+    }
+
+    private static string[] GetProblems(string source) => RunGenerator(source).Problems;
+
+    private static (string[] Problems, string Generated) RunGenerator(string source)
+    {
+        var compilation = CreateCompilation(CSharpSyntaxTree.ParseText(source, PARSE_OPTIONS));
 
         var driver = CSharpGeneratorDriver
             .Create(new AutoInterfaceGenerator())
