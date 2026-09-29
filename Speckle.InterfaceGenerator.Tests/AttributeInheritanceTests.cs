@@ -33,8 +33,7 @@ public class AttributeInheritanceTests
     [Fact]
     public void ObsoleteMethod_CopiedWithNamedArgs()
     {
-        var attribute = GetMethod(nameof(AttributesTestService.OldMethod))
-            .GetCustomAttribute<ObsoleteAttribute>();
+        var attribute = GetMethod("OldMethod").GetCustomAttribute<ObsoleteAttribute>();
 
         attribute.Should().NotBeNull();
         attribute!.Message.Should().Be("old");
@@ -99,10 +98,7 @@ public class AttributeInheritanceTests
             .Should()
             .NotBeNull();
 
-        GetProperty(nameof(AttributesTestService.OldProp))
-            .GetCustomAttribute<ObsoleteAttribute>()
-            .Should()
-            .NotBeNull();
+        GetProperty("OldProp").GetCustomAttribute<ObsoleteAttribute>().Should().NotBeNull();
     }
 
     [Fact]
