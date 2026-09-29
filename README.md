@@ -38,7 +38,7 @@ Supports:
  - Explicit interface visibility (using the `VisibilityModifier` property on `GenerateAutoInterface`).
  - Explicitly excluding a member from the interface (using `[AutoInterfaceIgnore]`).
  - Copying selected attributes from the class, methods, return values, parameters and properties onto the interface:
-   - `[Obsolete]`, `[Experimental]`, `[EditorBrowsable]`
+   - `[Obsolete]`, `[Experimental]`, `[EditorBrowsable]`, `[Pure]`
    - Nullability flow attributes: `[AllowNull]`, `[DisallowNull]`, `[MaybeNull]`, `[MaybeNullWhen]`, `[NotNull]`, `[NotNullWhen]`, `[NotNullIfNotNull]`, `[DoesNotReturn]`, `[DoesNotReturnIf]`
    - Caller info attributes: `[CallerMemberName]`, `[CallerFilePath]`, `[CallerLineNumber]`, `[CallerArgumentExpression]`
 

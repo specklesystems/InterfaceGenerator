@@ -149,6 +149,48 @@ public class GeneratorDriverTests
     }
 
     [Fact]
+    public void PureMethod_IsCopiedToInterface()
+    {
+        const string SOURCE = """
+            namespace Sample
+            {
+                [Speckle.InterfaceGenerator.GenerateAutoInterface]
+                public class Service : IService
+                {
+                    [System.Diagnostics.Contracts.Pure]
+                    public int Get() => 0;
+                }
+            }
+            """;
+
+        var (problems, generated) = RunGenerator(SOURCE);
+
+        problems.Should().BeEmpty();
+        generated.Should().Contain("[global::System.Diagnostics.Contracts.PureAttribute]");
+    }
+
+    [Fact]
+    public void PureClass_IsNotCopiedToInterface()
+    {
+        const string SOURCE = """
+            namespace Sample
+            {
+                [System.Diagnostics.Contracts.Pure]
+                [Speckle.InterfaceGenerator.GenerateAutoInterface]
+                public class Service : IService
+                {
+                    public int Get() => 0;
+                }
+            }
+            """;
+
+        var (problems, generated) = RunGenerator(SOURCE);
+
+        problems.Should().BeEmpty();
+        generated.Should().NotContain("PureAttribute");
+    }
+
+    [Fact]
     public void NestedNullableTypes_GenerateMatchingInterface()
     {
         const string SOURCE = """
@@ -172,7 +214,9 @@ public class GeneratorDriverTests
         GetProblems(SOURCE).Should().BeEmpty();
     }
 
-    private static string[] GetProblems(string source)
+    private static string[] GetProblems(string source) => RunGenerator(source).Problems;
+
+    private static (string[] Problems, string Generated) RunGenerator(string source)
     {
         var references = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
             .Split(Path.PathSeparator)
@@ -188,7 +232,7 @@ public class GeneratorDriverTests
             )
         );
 
-        CSharpGeneratorDriver
+        var driver = CSharpGeneratorDriver
             .Create(new AutoInterfaceGenerator())
             .RunGeneratorsAndUpdateCompilation(
                 compilation,
@@ -196,10 +240,21 @@ public class GeneratorDriverTests
                 out var generatorDiagnostics
             );
 
-        return generatorDiagnostics
+        var problems = generatorDiagnostics
             .Concat(output.GetDiagnostics())
             .Where(x => x.Severity >= DiagnosticSeverity.Warning)
             .Select(x => x.ToString())
             .ToArray();
+
+        var generated = string.Concat(
+            driver
+                .GetRunResult()
+                .GeneratedTrees.Where(x =>
+                    x.FilePath.EndsWith("_AutoInterface.g.cs", StringComparison.Ordinal)
+                )
+                .Select(x => x.ToString())
+        );
+
+        return (problems, generated);
     }
 }

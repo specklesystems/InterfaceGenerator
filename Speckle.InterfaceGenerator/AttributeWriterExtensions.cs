@@ -14,6 +14,7 @@ internal static class AttributeWriterExtensions
         "System.ObsoleteAttribute",
         "System.ComponentModel.EditorBrowsableAttribute",
         "System.Diagnostics.CodeAnalysis.ExperimentalAttribute",
+        "System.Diagnostics.Contracts.PureAttribute",
         "System.Diagnostics.CodeAnalysis.AllowNullAttribute",
         "System.Diagnostics.CodeAnalysis.DisallowNullAttribute",
         "System.Diagnostics.CodeAnalysis.MaybeNullAttribute",
@@ -32,30 +33,20 @@ internal static class AttributeWriterExtensions
     public static void WriteAttributes(
         this TextWriter writer,
         IEnumerable<AttributeData> attributes,
-        string? target = null,
-        bool inline = false
+        AttributeTargets target
     )
     {
         foreach (var attribute in attributes)
         {
-            var attributeClass = attribute.AttributeClass;
             if (
-                attributeClass is null
-                || attributeClass.TypeKind == TypeKind.Error
-                || !s_copiedAttributes.Contains(
-                    $"{attributeClass.ContainingNamespace.ToDisplayString()}.{attributeClass.MetadataName}"
-                )
+                attribute.AttributeClass is not { } attributeClass
+                || !ShouldCopy(attributeClass, target)
             )
             {
                 continue;
             }
 
-            writer.Write("[");
-            if (target is not null)
-            {
-                writer.Write("{0}: ", target);
-            }
-
+            writer.Write(target == AttributeTargets.ReturnValue ? "[return: " : "[");
             writer.Write(attributeClass.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
 
             var arguments = attribute
@@ -76,7 +67,7 @@ internal static class AttributeWriterExtensions
 
             writer.Write("]");
 
-            if (inline)
+            if (target == AttributeTargets.Parameter)
             {
                 writer.Write(" ");
             }
@@ -85,6 +76,26 @@ internal static class AttributeWriterExtensions
                 writer.WriteLine();
             }
         }
+    }
+
+    private static bool ShouldCopy(INamedTypeSymbol attributeClass, AttributeTargets target) =>
+        attributeClass.TypeKind != TypeKind.Error
+        && s_copiedAttributes.Contains(
+            $"{attributeClass.ContainingNamespace.ToDisplayString()}.{attributeClass.MetadataName}"
+        )
+        && (GetValidTargets(attributeClass) & target) != 0;
+
+    private static AttributeTargets GetValidTargets(INamedTypeSymbol attributeClass)
+    {
+        var usage = attributeClass
+            .GetAttributes()
+            .FirstOrDefault(x =>
+                x.AttributeClass?.ToDisplayString() == "System.AttributeUsageAttribute"
+            );
+
+        return usage?.ConstructorArguments.FirstOrDefault().Value is int validOn
+            ? (AttributeTargets)validOn
+            : AttributeTargets.All;
     }
 
     private static string FormatTypedConstant(TypedConstant constant)

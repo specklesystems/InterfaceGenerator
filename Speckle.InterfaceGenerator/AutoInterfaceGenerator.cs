@@ -175,7 +175,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
         ++codeWriter.Indent;
         WriteSymbolDocsIfPresent(codeWriter, implTypeSymbol);
-        codeWriter.WriteAttributes(implTypeSymbol.GetAttributes());
+        codeWriter.WriteAttributes(implTypeSymbol.GetAttributes(), AttributeTargets.Interface);
         codeWriter.Write("{0} partial interface {1}", visibilityModifier, interfaceName);
         WriteTypeGenericsIfNeeded(codeWriter, implTypeSymbol);
         codeWriter.WriteLine();
@@ -306,7 +306,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         }
 
         WriteSymbolDocsIfPresent(writer, propertySymbol);
-        writer.WriteAttributes(propertySymbol.GetAttributes());
+        writer.WriteAttributes(propertySymbol.GetAttributes(), AttributeTargets.Property);
 
         if (propertySymbol.IsIndexer)
         {
@@ -356,8 +356,11 @@ public class AutoInterfaceGenerator : ISourceGenerator
         }
 
         WriteSymbolDocsIfPresent(writer, methodSymbol);
-        writer.WriteAttributes(methodSymbol.GetAttributes());
-        writer.WriteAttributes(methodSymbol.GetReturnTypeAttributes(), "return");
+        writer.WriteAttributes(methodSymbol.GetAttributes(), AttributeTargets.Method);
+        writer.WriteAttributes(
+            methodSymbol.GetReturnTypeAttributes(),
+            AttributeTargets.ReturnValue
+        );
 
         writer.Write("{0} {1}", methodSymbol.ReturnType.ToTypeReference(), methodSymbol.Name);
 
@@ -383,7 +386,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
     private static void WriteMethodParam(TextWriter writer, IParameterSymbol param)
     {
-        writer.WriteAttributes(param.GetAttributes(), inline: true);
+        writer.WriteAttributes(param.GetAttributes(), AttributeTargets.Parameter);
 
         if (param.IsParams)
         {
