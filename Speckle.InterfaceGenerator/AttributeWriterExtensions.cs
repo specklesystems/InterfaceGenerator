@@ -9,7 +9,7 @@ namespace Speckle.InterfaceGenerator;
 
 internal static class AttributeWriterExtensions
 {
-    private static readonly HashSet<string> s_copiedAttributes =
+    private static readonly HashSet<string> COPIED_ATTRIBUTES =
     [
         "System.ObsoleteAttribute",
         "System.ComponentModel.EditorBrowsableAttribute",
@@ -80,7 +80,7 @@ internal static class AttributeWriterExtensions
 
     private static bool ShouldCopy(INamedTypeSymbol attributeClass, AttributeTargets target) =>
         attributeClass.TypeKind != TypeKind.Error
-        && s_copiedAttributes.Contains(
+        && COPIED_ATTRIBUTES.Contains(
             $"{attributeClass.ContainingNamespace.ToDisplayString()}.{attributeClass.MetadataName}"
         )
         && (GetValidTargets(attributeClass) & target) != 0;

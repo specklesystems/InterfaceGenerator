@@ -13,7 +13,7 @@ public class GeneratorDriverTests
     [Fact]
     public void TypeInRegularNamespace_GeneratesCompilableInterface()
     {
-        const string SOURCE = """
+        const string source = """
             namespace Sample.Events
             {
                 public class EventType { }
@@ -29,13 +29,13 @@ public class GeneratorDriverTests
             }
             """;
 
-        GetProblems(SOURCE).Should().BeEmpty();
+        GetProblems(source).Should().BeEmpty();
     }
 
     [Fact]
     public void TypeInKeywordNamespace_GeneratesCompilableInterface()
     {
-        const string SOURCE = """
+        const string source = """
             namespace Sample.@event
             {
                 public class EventType { }
@@ -51,13 +51,13 @@ public class GeneratorDriverTests
             }
             """;
 
-        GetProblems(SOURCE).Should().BeEmpty();
+        GetProblems(source).Should().BeEmpty();
     }
 
     [Fact]
     public void ClassInKeywordNamespace_GeneratesCompilableInterface()
     {
-        const string SOURCE = """
+        const string source = """
             namespace Sample.@event
             {
                 [Speckle.InterfaceGenerator.GenerateAutoInterface]
@@ -68,13 +68,13 @@ public class GeneratorDriverTests
             }
             """;
 
-        GetProblems(SOURCE).Should().BeEmpty();
+        GetProblems(source).Should().BeEmpty();
     }
 
     [Fact]
     public void GenericClassTypeParameter_GeneratesCompilableInterface()
     {
-        const string SOURCE = """
+        const string source = """
             namespace Sample
             {
                 [Speckle.InterfaceGenerator.GenerateAutoInterface]
@@ -87,13 +87,13 @@ public class GeneratorDriverTests
             }
             """;
 
-        GetProblems(SOURCE).Should().BeEmpty();
+        GetProblems(source).Should().BeEmpty();
     }
 
     [Fact]
     public void NullableTypeParameter_GeneratesMatchingInterface()
     {
-        const string SOURCE = """
+        const string source = """
             namespace Sample
             {
                 [Speckle.InterfaceGenerator.GenerateAutoInterface]
@@ -105,13 +105,13 @@ public class GeneratorDriverTests
             }
             """;
 
-        GetProblems(SOURCE).Should().BeEmpty();
+        GetProblems(source).Should().BeEmpty();
     }
 
     [Fact]
     public void TypeArgumentShadowedByNamespace_GeneratesCompilableInterface()
     {
-        const string SOURCE = """
+        const string source = """
             namespace Rhino.Geometry
             {
                 public class Mesh { }
@@ -127,13 +127,13 @@ public class GeneratorDriverTests
             }
             """;
 
-        GetProblems(SOURCE).Should().BeEmpty();
+        GetProblems(source).Should().BeEmpty();
     }
 
     [Fact]
     public void GenericMethodConstraintAfterUnconstrainedParameter_GeneratesMatchingInterface()
     {
-        const string SOURCE = """
+        const string source = """
             namespace Sample
             {
                 [Speckle.InterfaceGenerator.GenerateAutoInterface]
@@ -145,13 +145,13 @@ public class GeneratorDriverTests
             }
             """;
 
-        GetProblems(SOURCE).Should().BeEmpty();
+        GetProblems(source).Should().BeEmpty();
     }
 
     [Fact]
     public void PureMethod_IsCopiedToInterface()
     {
-        const string SOURCE = """
+        const string source = """
             namespace Sample
             {
                 [Speckle.InterfaceGenerator.GenerateAutoInterface]
@@ -163,7 +163,7 @@ public class GeneratorDriverTests
             }
             """;
 
-        var (problems, generated) = RunGenerator(SOURCE);
+        var (problems, generated) = RunGenerator(source);
 
         problems.Should().BeEmpty();
         generated.Should().Contain("[global::System.Diagnostics.Contracts.PureAttribute]");
@@ -172,7 +172,7 @@ public class GeneratorDriverTests
     [Fact]
     public void PureClass_IsNotCopiedToInterface()
     {
-        const string SOURCE = """
+        const string source = """
             namespace Sample
             {
                 [System.Diagnostics.Contracts.Pure]
@@ -184,7 +184,7 @@ public class GeneratorDriverTests
             }
             """;
 
-        var (problems, generated) = RunGenerator(SOURCE);
+        var (problems, generated) = RunGenerator(source);
 
         problems.Should().BeEmpty();
         generated.Should().NotContain("PureAttribute");
@@ -193,7 +193,7 @@ public class GeneratorDriverTests
     [Fact]
     public void NestedNullableTypes_GenerateMatchingInterface()
     {
-        const string SOURCE = """
+        const string source = """
             using System.Collections.Generic;
             using System.Threading.Tasks;
 
@@ -211,7 +211,7 @@ public class GeneratorDriverTests
             }
             """;
 
-        GetProblems(SOURCE).Should().BeEmpty();
+        GetProblems(source).Should().BeEmpty();
     }
 
     private static string[] GetProblems(string source) => RunGenerator(source).Problems;

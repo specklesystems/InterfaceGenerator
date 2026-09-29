@@ -7,13 +7,13 @@ namespace Speckle.InterfaceGenerator;
 
 internal static class SymbolExtensions
 {
-    private static readonly SymbolDisplayFormat s_typeFormat =
+    private static readonly SymbolDisplayFormat TYPE_FORMAT =
         SymbolDisplayFormat.FullyQualifiedFormat.AddMiscellaneousOptions(
             SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
         );
 
     public static string ToTypeReference(this ITypeSymbol typeSymbol) =>
-        typeSymbol.ToDisplayString(s_typeFormat);
+        typeSymbol.ToDisplayString(TYPE_FORMAT);
 
     public static bool TryGetAttribute(
         this ISymbol symbol,

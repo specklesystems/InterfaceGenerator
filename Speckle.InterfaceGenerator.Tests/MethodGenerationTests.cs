@@ -305,7 +305,7 @@ public class MethodGenerationTests
         parameters.Select(x => x.IsOptional).Should().AllBeEquivalentTo(true);
 
         parameters[0].DefaultValue.Should().Be("cGFyYW0=");
-        parameters[1].DefaultValue.Should().Be(MethodsTestService.StringConstant);
+        parameters[1].DefaultValue.Should().Be(MethodsTestService.STRING_CONSTANT);
         parameters[2].DefaultValue.Should().Be(0.1f);
         parameters[3].DefaultValue.Should().Be(0.2d);
         parameters[4].DefaultValue.Should().Be(0.3d);
@@ -357,7 +357,7 @@ public class MethodGenerationTests
 [GenerateAutoInterface]
 internal class MethodsTestService : IMethodsTestService
 {
-    public const string StringConstant = "Const";
+    public const string STRING_CONSTANT = "Const";
 
     public void VoidMethod() { }
 
@@ -400,7 +400,7 @@ internal class MethodsTestService : IMethodsTestService
 
     public void VoidMethodWithOptionalParams(
         string stringLiteral = "cGFyYW0=",
-        string stringConstant = StringConstant,
+        string stringConstant = STRING_CONSTANT,
         float floatLiteral = 0.1f,
         double doubleLiteral = 0.2,
         decimal decimalLiteral = 0.3m,

@@ -1,7 +1,6 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -72,8 +71,8 @@ public class AutoInterfaceGenerator : ISourceGenerator
     private static void GenerateAttributes(GeneratorExecutionContext context)
     {
         context.AddSource(
-            $"{Attributes.GenerateAutoInterfaceClassname}.g.cs",
-            SourceText.From(Attributes.AttributesSourceCode, Encoding.UTF8)
+            $"{Attributes.GENERATE_AUTO_INTERFACE_CLASSNAME}.g.cs",
+            SourceText.From(Attributes.ATTRIBUTES_SOURCE_CODE, Encoding.UTF8)
         );
     }
 
@@ -135,7 +134,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         AttributeData attributeData
     )
     {
-        string? result = attributeData.GetNamedParamValue(Attributes.VisibilityModifierPropName);
+        var result = attributeData.GetNamedParamValue(Attributes.VISIBILITY_MODIFIER_PROP_NAME);
         if (!string.IsNullOrEmpty(result))
         {
             return result ?? throw new NullReferenceException("result is null");
@@ -150,7 +149,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
     private static string InferInterfaceName(ISymbol implTypeSymbol, AttributeData attributeData)
     {
-        return attributeData.GetNamedParamValue(Attributes.InterfaceNamePropName)
+        return attributeData.GetNamedParamValue(Attributes.INTERFACE_NAME_PROP_NAME)
             ?? $"I{implTypeSymbol.Name}";
     }
 
@@ -272,7 +271,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
             lines.Add(line);
         }
 
-        for (int i = 1; i < lines.Count - 1; i++)
+        for (var i = 1; i < lines.Count - 1; i++)
         {
             var line = lines[i].TrimStart(); // for some reason, 4 spaces are inserted to the beginning of the line
             writer.WriteLine("/// {0}", line);
@@ -294,10 +293,10 @@ public class AutoInterfaceGenerator : ISourceGenerator
             return;
         }
 
-        bool hasPublicGetter =
+        var hasPublicGetter =
             propertySymbol.GetMethod is not null && IsPublicOrInternal(propertySymbol.GetMethod);
 
-        bool hasPublicSetter =
+        var hasPublicSetter =
             propertySymbol.SetMethod is not null && IsPublicOrInternal(propertySymbol.SetMethod);
 
         if (!hasPublicGetter && !hasPublicSetter)
@@ -478,11 +477,11 @@ public class AutoInterfaceGenerator : ISourceGenerator
     private void InitAttributes(Compilation compilation)
     {
         _generateAutoInterfaceAttribute = compilation.GetTypeByMetadataName(
-            $"{Attributes.AttributesNamespace}.{Attributes.GenerateAutoInterfaceClassname}"
+            $"{Attributes.ATTRIBUTES_NAMESPACE}.{Attributes.GENERATE_AUTO_INTERFACE_CLASSNAME}"
         );
 
         _ignoreAttribute = compilation.GetTypeByMetadataName(
-            $"{Attributes.AttributesNamespace}.{Attributes.AutoInterfaceIgnoreAttributeClassname}"
+            $"{Attributes.ATTRIBUTES_NAMESPACE}.{Attributes.AUTO_INTERFACE_IGNORE_ATTRIBUTE_CLASSNAME}"
         );
     }
 
@@ -510,7 +509,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
         var compilation = context.Compilation.AddSyntaxTrees(
             CSharpSyntaxTree.ParseText(
-                SourceText.From(Attributes.AttributesSourceCode, Encoding.UTF8),
+                SourceText.From(Attributes.ATTRIBUTES_SOURCE_CODE, Encoding.UTF8),
                 options
             )
         );
