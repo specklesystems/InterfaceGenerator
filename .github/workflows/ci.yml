@@ -2,6 +2,8 @@ name: "Check Build"
 
 on:
   pull_request:
+  push:
+    branches: [master]
 
 permissions:
   contents: read
@@ -19,11 +21,20 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Check formatting
+        run: dotnet csharpier check .
+
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore -warnaserror
 
       - name: Build
-        run: dotnet build --configuration Debug --no-restore
+        run: dotnet build --configuration Release --no-restore -warnaserror
 
       - name: Test
-        run: dotnet test --no-build --configuration Debug --verbosity normal
+        run: dotnet test --configuration Release --no-build
+
+      - name: Pack
+        run: dotnet pack Speckle.InterfaceGenerator/Speckle.InterfaceGenerator.csproj --configuration Release --no-build --output artifacts
