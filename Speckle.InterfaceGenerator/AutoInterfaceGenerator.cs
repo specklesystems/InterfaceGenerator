@@ -5,128 +5,79 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Speckle.InterfaceGenerator;
 
 [Generator]
-public class AutoInterfaceGenerator : ISourceGenerator
+public class AutoInterfaceGenerator : IIncrementalGenerator
 {
-    private INamedTypeSymbol? _generateAutoInterfaceAttribute;
-    private INamedTypeSymbol? _ignoreAttribute;
+    private const string GENERATE_AUTO_INTERFACE_METADATA_NAME =
+        $"{Attributes.ATTRIBUTES_NAMESPACE}.{Attributes.GENERATE_AUTO_INTERFACE_CLASSNAME}";
 
-    public void Initialize(GeneratorInitializationContext context)
+    private const string AUTO_INTERFACE_IGNORE_METADATA_NAME =
+        $"{Attributes.ATTRIBUTES_NAMESPACE}.{Attributes.AUTO_INTERFACE_IGNORE_ATTRIBUTE_CLASSNAME}";
+
+    private static readonly DiagnosticDescriptor EXCEPTION_DESCRIPTOR = new(
+        "SIG0001",
+        "Exception thrown in InterfaceGenerator",
+        "{0}",
+        "Speckle.InterfaceGenerator",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        customTags: WellKnownDiagnosticTags.AnalyzerException
+    );
+
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
+        context.RegisterPostInitializationOutput(static ctx =>
+            ctx.AddSource(
+                $"{Attributes.GENERATE_AUTO_INTERFACE_CLASSNAME}.g.cs",
+                SourceText.From(Attributes.ATTRIBUTES_SOURCE_CODE, Encoding.UTF8)
+            )
+        );
+
+        var interfaces = context
+            .SyntaxProvider.ForAttributeWithMetadataName(
+                GENERATE_AUTO_INTERFACE_METADATA_NAME,
+                static (node, _) => node is ClassDeclarationSyntax or RecordDeclarationSyntax,
+                static (ctx, _) => RenderInterface(ctx)
+            )
+            .WithTrackingName("RenderInterface");
+
+        context.RegisterSourceOutput(interfaces, static (ctx, source) => AddInterface(ctx, source));
     }
 
-    public void Execute(GeneratorExecutionContext context)
+    private static InterfaceSource RenderInterface(GeneratorAttributeSyntaxContext context)
     {
+        var implTypeSymbol = (INamedTypeSymbol)context.TargetSymbol;
+        var hintName =
+            $"{implTypeSymbol.GetFullMetadataName(useNameWhenNotFound: true)}_AutoInterface.g.cs";
+
         try
         {
-            ExecuteCore(context);
+            var source = GenerateInterfaceCode(implTypeSymbol, context.Attributes.Single());
+            return new InterfaceSource(hintName, source, null);
         }
         catch (Exception exception)
         {
-            RaiseExceptionDiagnostic(context, exception);
+            var error =
+                $"{exception.GetType().FullName} {exception.Message} {exception.StackTrace?.Trim()}";
+            return new InterfaceSource(hintName, null, error);
         }
     }
 
-    private static void RaiseExceptionDiagnostic(
-        GeneratorExecutionContext context,
-        Exception exception
-    )
+    private static void AddInterface(SourceProductionContext context, InterfaceSource source)
     {
-        var descriptor = new DiagnosticDescriptor(
-            "SIG0001",
-            "Exception thrown in InterfaceGenerator",
-            $"{exception.GetType().FullName} {exception.Message} {exception.StackTrace.Trim()}",
-            "Speckle.InterfaceGenerator",
-            DiagnosticSeverity.Error,
-            true,
-            customTags: WellKnownDiagnosticTags.AnalyzerException
-        );
-
-        var diagnostic = Diagnostic.Create(descriptor, null);
-
-        context.ReportDiagnostic(diagnostic);
-    }
-
-    private void ExecuteCore(GeneratorExecutionContext context)
-    {
-        // setting the culture to invariant prevents errors such as emitting a decimal comma (0,1) instead of
-        // a decimal point (0.1) in certain cultures
-        var prevCulture = Thread.CurrentThread.CurrentCulture;
-        Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
-        GenerateAttributes(context);
-        GenerateInterfaces(context);
-
-        Thread.CurrentThread.CurrentCulture = prevCulture;
-    }
-
-    private static void GenerateAttributes(GeneratorExecutionContext context)
-    {
-        context.AddSource(
-            $"{Attributes.GENERATE_AUTO_INTERFACE_CLASSNAME}.g.cs",
-            SourceText.From(Attributes.ATTRIBUTES_SOURCE_CODE, Encoding.UTF8)
-        );
-    }
-
-    private void GenerateInterfaces(GeneratorExecutionContext context)
-    {
-        if (context.SyntaxReceiver is not SyntaxReceiver receiver)
+        if (source.Source is null)
         {
+            context.ReportDiagnostic(Diagnostic.Create(EXCEPTION_DESCRIPTOR, null, source.Error));
             return;
         }
 
-        var compilation = GetCompilation(context);
-        InitAttributes(compilation);
-
-        var classSymbols = GetImplTypeSymbols(compilation, receiver);
-
-        List<string> classSymbolNames = [];
-
-        foreach (var implTypeSymbol in classSymbols)
-        {
-            if (
-                !implTypeSymbol.TryGetAttribute(
-                    _generateAutoInterfaceAttribute
-                        ?? throw new NullReferenceException(
-                            "_generateAutoInterfaceAttribute is null"
-                        ),
-                    out var attributes
-                )
-            )
-            {
-                continue;
-            }
-
-            if (
-                classSymbolNames.Contains(
-                    implTypeSymbol.GetFullMetadataName(useNameWhenNotFound: true)
-                )
-            )
-            {
-                continue; // partial class, already added
-            }
-
-            classSymbolNames.Add(implTypeSymbol.GetFullMetadataName(useNameWhenNotFound: true));
-
-            var attribute = attributes.Single();
-            var source = SourceText.From(
-                GenerateInterfaceCode(implTypeSymbol, attribute),
-                Encoding.UTF8
-            );
-
-            context.AddSource(
-                $"{implTypeSymbol.GetFullMetadataName(useNameWhenNotFound: true)}_AutoInterface.g.cs",
-                source
-            );
-        }
+        context.AddSource(source.HintName, SourceText.From(source.Source, Encoding.UTF8));
     }
 
     private static string InferVisibilityModifier(
@@ -153,14 +104,13 @@ public class AutoInterfaceGenerator : ISourceGenerator
             ?? $"I{implTypeSymbol.Name}";
     }
 
-    private string GenerateInterfaceCode(
+    private static string GenerateInterfaceCode(
         INamedTypeSymbol implTypeSymbol,
         AttributeData attributeData
     )
     {
-        using var stream = new MemoryStream();
-        var streamWriter = new StreamWriter(stream, Encoding.UTF8);
-        var codeWriter = new IndentedTextWriter(streamWriter, "    ");
+        using var stringWriter = new StringWriter(CultureInfo.InvariantCulture);
+        using var codeWriter = new IndentedTextWriter(stringWriter, "    ");
 
         var namespaceName = implTypeSymbol.ContainingNamespace.ToDisplayString();
         var interfaceName = InferInterfaceName(implTypeSymbol, attributeData);
@@ -191,9 +141,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         codeWriter.WriteLine("#nullable restore");
 
         codeWriter.Flush();
-        stream.Seek(0, SeekOrigin.Begin);
-        using var reader = new StreamReader(stream, Encoding.UTF8, true);
-        return reader.ReadToEnd();
+        return stringWriter.ToString();
     }
 
     private static void WriteTypeGenericsIfNeeded(
@@ -213,7 +161,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         WriteTypeParameterConstraints(writer, implTypeSymbol.TypeParameters);
     }
 
-    private void GenerateInterfaceMemberDefinitions(
+    private static void GenerateInterfaceMemberDefinitions(
         TextWriter writer,
         INamedTypeSymbol implTypeSymbol
     )
@@ -222,9 +170,7 @@ public class AutoInterfaceGenerator : ISourceGenerator
         {
             if (
                 member.DeclaredAccessibility != Accessibility.Public
-                || member.HasAttribute(
-                    _ignoreAttribute ?? throw new NullReferenceException("_ignoreAttribute is null")
-                )
+                || member.HasAttribute(AUTO_INTERFACE_IGNORE_METADATA_NAME)
             )
             {
                 continue;
@@ -423,37 +369,38 @@ public class AutoInterfaceGenerator : ISourceGenerator
 
     private static void WriteParamExplicitDefaultValue(TextWriter writer, IParameterSymbol param)
     {
-        if (param.ExplicitDefaultValue is null)
+        writer.Write(" = ");
+        writer.Write(FormatDefaultValue(param.Type, param.ExplicitDefaultValue));
+    }
+
+    private static string FormatDefaultValue(ITypeSymbol type, object? value)
+    {
+        if (value is null)
         {
-            writer.Write(" = default");
+            return "default";
         }
-        else
-        {
-            switch (param.Type.Name)
+
+        var valueType = type
+            is INamedTypeSymbol
             {
-                case nameof(String):
-                    writer.Write(" = \"{0}\"", param.ExplicitDefaultValue);
-                    break;
-                case nameof(Single):
-                    writer.Write(" = {0}f", param.ExplicitDefaultValue);
-                    break;
-                case nameof(Double):
-                    writer.Write(" = {0}d", param.ExplicitDefaultValue);
-                    break;
-                case nameof(Decimal):
-                    writer.Write(" = {0}m", param.ExplicitDefaultValue);
-                    break;
-                case nameof(Boolean):
-                    writer.Write(" = {0}", param.ExplicitDefaultValue.ToString().ToLower());
-                    break;
-                case nameof(Nullable<bool>):
-                    writer.Write(" = {0}", param.ExplicitDefaultValue.ToString().ToLower());
-                    break;
-                default:
-                    writer.Write(" = {0}", param.ExplicitDefaultValue);
-                    break;
-            }
+                OriginalDefinition.SpecialType: SpecialType.System_Nullable_T,
+            } nullable
+            ? nullable.TypeArguments[0]
+            : type;
+
+        if (valueType.TypeKind == TypeKind.Enum)
+        {
+            return LiteralFormatter.FormatEnum(valueType, value);
         }
+
+        var literal = LiteralFormatter.FormatPrimitive(value);
+        return valueType.SpecialType switch
+        {
+            SpecialType.System_Single => literal + "f",
+            SpecialType.System_Double => literal + "d",
+            SpecialType.System_Decimal => literal + "m",
+            _ => literal,
+        };
     }
 
     private static void WriteTypeParameterConstraints(
@@ -472,48 +419,5 @@ public class AutoInterfaceGenerator : ISourceGenerator
             writer.Write(" where {0} : ", typeParameter.Name);
             writer.WriteJoin(", ", constraints);
         }
-    }
-
-    private void InitAttributes(Compilation compilation)
-    {
-        _generateAutoInterfaceAttribute = compilation.GetTypeByMetadataName(
-            $"{Attributes.ATTRIBUTES_NAMESPACE}.{Attributes.GENERATE_AUTO_INTERFACE_CLASSNAME}"
-        );
-
-        _ignoreAttribute = compilation.GetTypeByMetadataName(
-            $"{Attributes.ATTRIBUTES_NAMESPACE}.{Attributes.AUTO_INTERFACE_IGNORE_ATTRIBUTE_CLASSNAME}"
-        );
-    }
-
-    private static IEnumerable<INamedTypeSymbol> GetImplTypeSymbols(
-        Compilation compilation,
-        SyntaxReceiver receiver
-    )
-    {
-        return receiver
-            .CandidateTypes.Select(candidate => GetTypeSymbol(compilation, candidate))
-            .Where(x => x != null)
-            .Cast<INamedTypeSymbol>();
-    }
-
-    private static INamedTypeSymbol? GetTypeSymbol(Compilation compilation, SyntaxNode type)
-    {
-        var model = compilation.GetSemanticModel(type.SyntaxTree);
-        var typeSymbol = model.GetDeclaredSymbol(type);
-        return typeSymbol as INamedTypeSymbol;
-    }
-
-    private static Compilation GetCompilation(GeneratorExecutionContext context)
-    {
-        var options = context.Compilation.SyntaxTrees.First().Options as CSharpParseOptions;
-
-        var compilation = context.Compilation.AddSyntaxTrees(
-            CSharpSyntaxTree.ParseText(
-                SourceText.From(Attributes.ATTRIBUTES_SOURCE_CODE, Encoding.UTF8),
-                options
-            )
-        );
-
-        return compilation;
     }
 }
